@@ -1,0 +1,29 @@
+name: Swing Trading Scan
+
+on:
+  schedule:
+    # 18:30 WIB (UTC+7) = 11:30 UTC, Senin-Jumat
+    - cron: '30 11 * * 1-5'
+  workflow_dispatch: {}
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Jalankan scan & kirim notifikasi
+        run: npm run scan
+        env:
+          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+          CHAT_ID: ${{ secrets.CHAT_ID }}

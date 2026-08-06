@@ -71,14 +71,21 @@ Yahoo Finance (EMA 20, EMA 50, RSI 14). Berjalan otomatis setiap Senin–Jumat p
 
 ## Panduan Deploy Gratis 24/7
 
-Render.com sudah tidak menyediakan instance **Free** untuk tipe **Background Worker** (hanya
-tersedia mulai paket berbayar). Instance Free hanya ada untuk tipe **Web Service**, tapi Web
-Service free otomatis *sleep* setelah ±15 menit tanpa trafik HTTP.
+Render.com sudah tidak menyediakan instance **Free** untuk tipe **Background Worker** (harus
+verifikasi kartu, dan kartu lokal sering ditolak). Railway.app juga cuma menyediakan trial
+usage-based yang habis setelah beberapa waktu. Karena itu, opsi utama di panduan ini adalah
+**GitHub Actions** — 100% gratis, tanpa kartu, tanpa akun hosting baru.
 
-Solusinya: bot ini sudah dilengkapi health-check server kecil ([src/server/healthServer.js](src/server/healthServer.js))
-yang membuka port HTTP, jadi bisa dideploy sebagai **Web Service** gratis. Agar tidak pernah
-sleep, tambahkan monitor gratis dari **UptimeRobot** yang melakukan ping ke URL bot setiap
-beberapa menit (langkah 2A di bawah).
+Ada 2 mode jalan yang didukung proyek ini:
+
+- **Mode terjadwal (GitHub Actions)** — `scripts/scan-and-notify.js` dijalankan sekali oleh
+  GitHub Actions setiap Senin-Jumat 18:30 WIB, langsung kirim hasil ke Telegram lalu selesai.
+  Tidak ada server yang harus terus menyala. Command `/scan` interaktif digantikan tombol
+  **"Run workflow"** di tab Actions GitHub.
+- **Mode server 24/7 (`npm start` / `index.js`)** — bot Telegraf long-polling + cron internal +
+  health-check server, untuk dijalankan di platform yang benar-benar bisa hidupkan proses terus
+  menerus (VPS, Render Web Service, dsb). Command `/scan`, `/start`, `/help` real-time via chat
+  hanya berfungsi di mode ini.
 
 ### 1. Siapkan Repository GitHub
 
@@ -99,7 +106,24 @@ git branch -M main
 git push -u origin main
 ```
 
-### 2A. Deploy ke Render.com (Web Service gratis + UptimeRobot anti-sleep)
+### 2A. GitHub Actions (Recommended — tanpa kartu, tanpa hosting)
+
+1. Buka repo GitHub Anda → **Settings** → **Secrets and variables** → **Actions**.
+2. Klik **New repository secret**, tambahkan dua secret:
+   - `BOT_TOKEN` = token dari BotFather
+   - `CHAT_ID` = chat id tujuan
+3. Workflow sudah tersedia di [.github/workflows/scan.yml](.github/workflows/scan.yml), terjadwal
+   `30 11 * * 1-5` UTC (= 18:30 WIB, Senin-Jumat).
+4. Uji manual: buka tab **Actions** → pilih workflow **Swing Trading Scan** → klik
+   **Run workflow** → **Run workflow**. Tunggu selesai, cek Telegram Anda menerima hasil scan.
+5. Selesai — tidak perlu langkah lain, tidak ada proses yang perlu tetap menyala.
+
+> Catatan: GitHub menonaktifkan workflow terjadwal secara otomatis jika repo tidak ada aktivitas
+> (commit) selama 60 hari. Jika itu terjadi, buka tab Actions dan klik **Enable workflow**.
+> Jadwal cron GitHub Actions juga tidak presisi ke detik — bisa meleset beberapa menit saat
+> traffic GitHub sedang tinggi.
+
+### 2B. Deploy ke Render.com (Web Service gratis + UptimeRobot anti-sleep)
 
 1. Buat akun di [render.com](https://render.com) dan login dengan GitHub.
 2. Klik **New +** → **Web Service**.
@@ -127,7 +151,7 @@ git push -u origin main
    - Simpan. Selama UptimeRobot terus ping, service tidak akan sleep sehingga cron 18:30 dan
      `/scan` tetap responsif 24/7.
 
-### 2B. Deploy ke Railway.app (alternatif)
+### 2C. Deploy ke Railway.app (alternatif, trial usage-based)
 
 1. Buat akun di [railway.app](https://railway.app) dan login dengan GitHub.
 2. Klik **New Project** → **Deploy from GitHub repo** → pilih repo bot ini.
