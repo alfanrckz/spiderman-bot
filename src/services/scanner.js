@@ -22,10 +22,16 @@ export async function runSwingScan() {
   const bullishPullback = liquidResults.filter((result) => result.matches.bullishPullback);
   const bullishReversal = liquidResults.filter((result) => result.matches.bullishReversal);
   const volumeSpike = liquidResults.filter((result) => result.matches.volumeSpike);
+  const hiddenAccumulation = liquidResults.filter((result) => result.matches.hiddenAccumulation);
 
-  return { bullishPullback, bullishReversal, volumeSpike };
+  return { bullishPullback, bullishReversal, volumeSpike, hiddenAccumulation };
 }
 
 export function countActionableSignals(result) {
-  return result.bullishPullback.length + result.bullishReversal.length + result.volumeSpike.length;
+  return (
+    result.bullishPullback.length +
+    result.bullishReversal.length +
+    result.volumeSpike.length +
+    result.hiddenAccumulation.length
+  );
 }

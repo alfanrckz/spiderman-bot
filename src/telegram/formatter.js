@@ -76,6 +76,18 @@ function formatVolumeSpikeBlock(signal) {
   ].join('\n');
 }
 
+function formatHiddenAccumulationBlock(signal) {
+  return [
+    `🐋 *AKUMULASI TERSEMBUNYI*`,
+    ``,
+    ...formatBaseLines(signal),
+    ``,
+    ...formatTradeLines(signal),
+    ``,
+    `📝 OBV bikin rekor tertinggi 20 hari, tapi harga belum ikut — indikasi volume beli menumpuk duluan (proxy volume, bukan data broker asli). Potensi breakout menyusul.`,
+  ].join('\n');
+}
+
 function buildSectionBlocks(title, items, blockFormatter, emptyText) {
   if (items.length === 0) {
     return [`${title}\n${emptyText}`];
@@ -112,6 +124,7 @@ export function formatScanSummary(result) {
     ...buildSectionBlocks('🟢 *Bullish Pullback* (swing)', result.bullishPullback, formatBullishPullbackBlock, emptyText),
     ...buildSectionBlocks('🔄 *Bullish Reversal* (swing/intraday)', result.bullishReversal, formatBullishReversalBlock, emptyText),
     ...buildSectionBlocks('🚀 *Volume Spike* (intraday)', result.volumeSpike, formatVolumeSpikeBlock, emptyText),
+    ...buildSectionBlocks('🐋 *Akumulasi Tersembunyi* (proxy volume/OBV)', result.hiddenAccumulation, formatHiddenAccumulationBlock, emptyText),
   ];
 
   return chunkBlocks(blocks);

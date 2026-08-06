@@ -40,7 +40,7 @@ harian per ticker):
 - Close terakhir > Rp 100
 - Nilai transaksi harian (Close × Volume) > Rp 3.000.000.000
 
-Setelah lolos likuiditas, tiap ticker dicek terhadap 3 kategori sinyal (satu ticker bisa masuk
+Setelah lolos likuiditas, tiap ticker dicek terhadap 4 kategori sinyal (satu ticker bisa masuk
 lebih dari satu kategori sekaligus):
 
 1. **🟢 Bullish Pullback** (swing) — `Close > EMA20 > EMA50` (uptrend) dan `RSI(14)` di rentang
@@ -52,12 +52,17 @@ lebih dari satu kategori sekaligus):
      dari penutupan kemarin.
 3. **🚀 Volume Spike** (intraday) — volume hari ini ≥ 2× rata-rata volume 20 hari, harga naik
    ≥ 3% dari penutupan kemarin, dan RSI belum overbought (`< 70`).
+4. **🐋 Akumulasi Tersembunyi** (proxy volume, *bukan* bandarmology broker asli) — OBV
+   (On-Balance Volume) mencetak rekor tertinggi baru dalam 20 hari terakhir, tapi harga **belum**
+   ikut mencetak rekor tertinggi, dan RSI belum overbought. Indikasi volume beli menumpuk lebih
+   dulu sebelum harga bergerak. Ini hanya proxy dari data harga & volume publik (Yahoo Finance) —
+   bukan analisis broker summary/asing net buy seperti bandarmology yang sesungguhnya, karena
+   data itu tidak tersedia gratis.
 
 Guard RSI overbought (`< 70`) di atas sengaja dipasang supaya bot tidak "mengejar" saham yang
 sudah naik terlalu jauh di hari yang sama — mengurangi risiko entry di puncak lonjakan harga.
 
-**Entry / Take Profit / Stop Loss** (berbasis ATR(14), berlaku untuk Pullback & Reversal &
-Volume Spike):
+**Entry / Take Profit / Stop Loss** (berbasis ATR(14), berlaku untuk semua kategori di atas):
 - Entry = Close terakhir
 - Stop Loss = Entry − 1.5 × ATR(14)
 - Take Profit = Entry + 2 × risk (risk = Entry − Stop Loss), sehingga Risk:Reward ≈ 1:2

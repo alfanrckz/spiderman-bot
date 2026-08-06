@@ -5,6 +5,7 @@ import { buildTradePlan } from './tradePlan.js';
 
 const MIN_CANDLES_REQUIRED = 100;
 const VOLUME_LOOKBACK = 20;
+const OBV_DIVERGENCE_LOOKBACK = 20;
 
 export async function analyzeTicker(ticker) {
   const history = await fetchDailyHistory(ticker);
@@ -27,7 +28,7 @@ export async function analyzeTicker(ticker) {
     return null;
   }
 
-  const { ema20, ema50, rsi14, atr14 } = computeIndicatorSeries(history);
+  const { ema20, ema50, rsi14, atr14, obv } = computeIndicatorSeries(history);
   const lastEma20 = ema20.at(-1);
   const lastEma50 = ema50.at(-1);
   const prevEma20 = ema20.at(-2);
@@ -39,7 +40,7 @@ export async function analyzeTicker(ticker) {
   const hasCompleteIndicators = [lastEma20, lastEma50, prevEma20, prevEma50, lastRsi, prevRsi, lastAtr]
     .every((value) => value != null);
 
-  if (!hasCompleteIndicators) {
+  if (!hasCompleteIndicators || obv.length < OBV_DIVERGENCE_LOOKBACK) {
     return null;
   }
 
@@ -73,6 +74,15 @@ export async function analyzeTicker(ticker) {
     pctChangeToday >= config.volumeSpikeMinGainPct &&
     isNotOverbought;
 
+  // Akumulasi Tersembunyi (proxy volume, bukan bandarmology broker asli): OBV bikin rekor
+  // tertinggi baru dalam N hari terakhir, tapi harga belum ikut bikin rekor tertinggi — indikasi
+  // volume beli menumpuk duluan sebelum harga benar-benar bergerak.
+  const recentObv = obv.slice(-OBV_DIVERGENCE_LOOKBACK);
+  const recentClosesForObv = history.slice(-OBV_DIVERGENCE_LOOKBACK).map((candle) => candle.close);
+  const obvMadeNewHigh = recentObv.at(-1) === Math.max(...recentObv);
+  const priceMadeNewHigh = recentClosesForObv.at(-1) === Math.max(...recentClosesForObv);
+  const hiddenAccumulation = obvMadeNewHigh && !priceMadeNewHigh && isNotOverbought;
+
   const tradePlan = buildTradePlan(lastClose, lastAtr);
 
   let reversalReason = null;
@@ -99,6 +109,7 @@ export async function analyzeTicker(ticker) {
       bullishPullback,
       bullishReversal,
       volumeSpike,
+      hiddenAccumulation,
     },
   };
 }
