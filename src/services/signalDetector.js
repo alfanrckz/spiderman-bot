@@ -54,17 +54,24 @@ export async function analyzeTicker(ticker) {
   const isPullbackZone = lastRsi >= 35 && lastRsi <= 48;
   const bullishPullback = isUptrend && isPullbackZone;
 
-  // Bullish Reversal: golden cross EMA20/EMA50 baru terjadi, atau RSI baru rebound dari oversold.
-  const goldenCross = prevEma20 <= prevEma50 && lastEma20 > lastEma50 && lastClose > lastEma20;
+  // Bullish Reversal: golden cross EMA20/EMA50 baru terjadi (selama belum overbought), atau RSI
+  // baru rebound dari oversold. Guard RSI overbought mencegah "mengejar" saham yang sudah naik
+  // terlalu jauh di hari yang sama.
+  const isNotOverbought = lastRsi < config.rsiOverboughtThreshold;
+  const goldenCross =
+    prevEma20 <= prevEma50 && lastEma20 > lastEma50 && lastClose > lastEma20 && isNotOverbought;
   const rsiOversoldRecovery =
     prevRsi < config.rsiOversoldThreshold &&
     lastRsi >= config.rsiOversoldThreshold &&
     lastClose > prevCandle.close;
   const bullishReversal = goldenCross || rsiOversoldRecovery;
 
-  // Volume Spike: volume jauh di atas rata-rata dibarengi kenaikan harga signifikan (candidate intraday).
+  // Volume Spike: volume jauh di atas rata-rata dibarengi kenaikan harga signifikan, tapi
+  // dilewatkan jika RSI sudah overbought (menghindari entry di puncak lonjakan).
   const volumeSpike =
-    volumeRatio >= config.volumeSpikeRatio && pctChangeToday >= config.volumeSpikeMinGainPct;
+    volumeRatio >= config.volumeSpikeRatio &&
+    pctChangeToday >= config.volumeSpikeMinGainPct &&
+    isNotOverbought;
 
   const tradePlan = buildTradePlan(lastClose, lastAtr);
 

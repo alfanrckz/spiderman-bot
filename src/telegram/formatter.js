@@ -76,11 +76,6 @@ function formatVolumeSpikeBlock(signal) {
   ].join('\n');
 }
 
-function formatTopGainerLine(signal, rank) {
-  const transactionInBillions = signal.transactionValue / 1_000_000_000;
-  return `${rank}. #${tickerCodeOf(signal)} — Rp ${integerFormatter.format(signal.lastClose)} (${signedDecimalFormatter.format(signal.pctChangeToday)}%), Value Rp ${decimalFormatter.format(transactionInBillions)} M`;
-}
-
 function buildSectionBlocks(title, items, blockFormatter, emptyText) {
   if (items.length === 0) {
     return [`${title}\n${emptyText}`];
@@ -118,15 +113,6 @@ export function formatScanSummary(result) {
     ...buildSectionBlocks('🔄 *Bullish Reversal* (swing/intraday)', result.bullishReversal, formatBullishReversalBlock, emptyText),
     ...buildSectionBlocks('🚀 *Volume Spike* (intraday)', result.volumeSpike, formatVolumeSpikeBlock, emptyText),
   ];
-
-  if (result.topGainers.length > 0) {
-    blocks.push(
-      [
-        `🔥 *Top ${result.topGainers.length} Gainers Hari Ini* (trending, bukan sinyal beli)`,
-        ...result.topGainers.map((signal, index) => formatTopGainerLine(signal, index + 1)),
-      ].join('\n')
-    );
-  }
 
   return chunkBlocks(blocks);
 }

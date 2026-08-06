@@ -46,24 +46,21 @@ lebih dari satu kategori sekaligus):
 1. **🟢 Bullish Pullback** (swing) — `Close > EMA20 > EMA50` (uptrend) dan `RSI(14)` di rentang
    `35–48` (koreksi sehat dalam tren naik).
 2. **🔄 Bullish Reversal** (swing/intraday) — salah satu dari:
-   - **Golden Cross**: `EMA20` baru memotong ke atas `EMA50` hari ini (kemarin masih di bawah).
+   - **Golden Cross**: `EMA20` baru memotong ke atas `EMA50` hari ini (kemarin masih di bawah),
+     dan RSI belum overbought (`< 70`).
    - **RSI Oversold Recovery**: `RSI(14)` kemarin < 30, hari ini rebound ke ≥ 30, dan harga naik
      dari penutupan kemarin.
-3. **🚀 Volume Spike** (intraday) — volume hari ini ≥ 2× rata-rata volume 20 hari **dan** harga
-   naik ≥ 3% dari penutupan kemarin.
+3. **🚀 Volume Spike** (intraday) — volume hari ini ≥ 2× rata-rata volume 20 hari, harga naik
+   ≥ 3% dari penutupan kemarin, dan RSI belum overbought (`< 70`).
 
-Selain 3 kategori di atas, bot juga menampilkan **🔥 Top Gainers Hari Ini** — ranking saham
-likuid dengan kenaikan harga harian terbesar (murni informasi tren pasar, bukan sinyal beli).
+Guard RSI overbought (`< 70`) di atas sengaja dipasang supaya bot tidak "mengejar" saham yang
+sudah naik terlalu jauh di hari yang sama — mengurangi risiko entry di puncak lonjakan harga.
 
 **Entry / Take Profit / Stop Loss** (berbasis ATR(14), berlaku untuk Pullback & Reversal &
 Volume Spike):
 - Entry = Close terakhir
 - Stop Loss = Entry − 1.5 × ATR(14)
 - Take Profit = Entry + 2 × risk (risk = Entry − Stop Loss), sehingga Risk:Reward ≈ 1:2
-
-> Catatan risiko: Golden Cross bisa saja terjadi saat RSI sudah tinggi/overbought (mengejar
-> saham yang sudah naik besar hari itu). Selalu cek kondisi RSI & konteks pasar sebelum entry,
-> jangan hanya mengandalkan satu kategori sinyal.
 
 ## Setup Lokal
 
@@ -216,7 +213,7 @@ git push -u origin main
 | `VOLUME_SPIKE_RATIO` | ❌ | `2` | Ambang rasio volume hari ini vs rata-rata 20 hari |
 | `VOLUME_SPIKE_MIN_GAIN_PCT` | ❌ | `3` | Ambang minimum kenaikan harga (%) untuk kategori Volume Spike |
 | `RSI_OVERSOLD_THRESHOLD` | ❌ | `30` | Ambang RSI oversold untuk deteksi Bullish Reversal |
-| `TOP_GAINERS_COUNT` | ❌ | `5` | Jumlah saham yang ditampilkan di ranking Top Gainers |
+| `RSI_OVERBOUGHT_THRESHOLD` | ❌ | `70` | Ambang RSI overbought — di atas ini, Reversal & Volume Spike diabaikan |
 
 ## Command Telegram
 

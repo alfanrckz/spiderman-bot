@@ -23,11 +23,7 @@ export async function runSwingScan() {
   const bullishReversal = liquidResults.filter((result) => result.matches.bullishReversal);
   const volumeSpike = liquidResults.filter((result) => result.matches.volumeSpike);
 
-  const topGainers = [...liquidResults]
-    .sort((a, b) => b.pctChangeToday - a.pctChangeToday)
-    .slice(0, config.topGainersCount);
-
-  return { bullishPullback, bullishReversal, volumeSpike, topGainers };
+  return { bullishPullback, bullishReversal, volumeSpike };
 }
 
 export function countActionableSignals(result) {
