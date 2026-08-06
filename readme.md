@@ -1,0 +1,161 @@
+# Bot Telegram Swing Trading BEI/IDX
+
+Bot Telegram (Node.js/ESM) yang memindai saham likuid di Bursa Efek Indonesia dan mengirim
+notifikasi sinyal **Bullish Pullback** untuk swing trading, berdasarkan data EOD resmi dari
+Yahoo Finance (EMA 20, EMA 50, RSI 14). Berjalan otomatis setiap Senin–Jumat pukul 18:30 WIB via
+`node-cron`, dan bisa dipicu manual dengan command `/scan`.
+
+## Struktur Proyek
+
+```
+.
+├── index.js                       # Entry point: launch bot + start cron
+├── src/
+│   ├── config/env.js              # Load & validasi .env
+│   ├── data/stockUniverse.js      # Universum ticker LQ45/Kompas100 (.JK)
+│   ├── services/
+│   │   ├── marketData.js          # Fetch data EOD dari yahoo-finance2
+│   │   ├── indicatorEngine.js     # Hitung EMA20/EMA50/RSI14
+│   │   ├── signalDetector.js      # Filter likuiditas + logika sinyal
+│   │   └── scanner.js             # Orkestrasi scan seluruh universum
+│   ├── telegram/
+│   │   ├── bot.js                 # Instance Telegraf + command /start /scan
+│   │   └── formatter.js           # Format pesan Markdown
+│   ├── scheduler/cron.js          # Jadwal node-cron Asia/Jakarta
+│   └── utils/concurrencyLimiter.js
+├── .env.example
+├── .gitignore
+└── package.json
+```
+
+## Logika Sinyal
+
+1. **Filter likuiditas** (dicek sebelum indikator dihitung):
+   - Close terakhir > Rp 100
+   - Nilai transaksi harian (Close × Volume) > Rp 3.000.000.000
+2. **Sinyal Beli — Bullish Pullback** (butuh minimal 100 candle harian):
+   - Uptrend: `Close > EMA20` dan `EMA20 > EMA50`
+   - Pullback sehat: `RSI(14)` berada di rentang `35–48`
+3. **Entry / Take Profit / Stop Loss** (berbasis ATR(14), volatilitas masing-masing saham):
+   - Entry = Close terakhir
+   - Stop Loss = Entry − 1.5 × ATR(14)
+   - Take Profit = Entry + 2 × risk (risk = Entry − Stop Loss), sehingga Risk:Reward ≈ 1:2
+
+## Setup Lokal
+
+1. Install Node.js 18+.
+2. Install dependency:
+   ```bash
+   npm install
+   ```
+3. Copy `.env.example` menjadi `.env` dan isi:
+   ```
+   BOT_TOKEN=token_dari_BotFather
+   CHAT_ID=chat_id_tujuan_notifikasi
+   ```
+4. Jalankan:
+   ```bash
+   npm start
+   ```
+5. Uji di Telegram: kirim `/start` lalu `/scan` ke bot Anda.
+
+### Cara mendapatkan `BOT_TOKEN` dan `CHAT_ID`
+
+- **BOT_TOKEN**: chat ke [@BotFather](https://t.me/BotFather) di Telegram → `/newbot` → ikuti
+  instruksi → token diberikan setelah bot dibuat.
+- **CHAT_ID**:
+  1. Kirim pesan apa saja ke bot Anda (atau tambahkan ke grup).
+  2. Buka `https://api.telegram.org/bot<BOT_TOKEN>/getUpdates` di browser.
+  3. Cari field `"chat":{"id": ...}` — itu adalah `CHAT_ID` Anda (untuk grup biasanya berupa
+     angka negatif).
+
+## Panduan Deploy Gratis 24/7
+
+Karena bot ini menggunakan Telegraf **long polling** (bukan webhook) dan `node-cron` internal,
+bot harus dijalankan sebagai **Background Worker**, bukan Web Service — proses ini tidak
+membuka port HTTP.
+
+### 1. Siapkan Repository GitHub
+
+```bash
+git init
+git add .
+git commit -m "Initial commit: bot swing trading BEI"
+```
+
+Pastikan `.gitignore` sudah berisi `.env` dan `node_modules/` (sudah disediakan di proyek ini)
+agar token dan dependency tidak ikut ter-commit.
+
+Buat repo baru di GitHub, lalu push:
+
+```bash
+git remote add origin https://github.com/<username>/<nama-repo>.git
+git branch -M main
+git push -u origin main
+```
+
+### 2A. Deploy ke Render.com (Background Worker — gratis)
+
+1. Buat akun di [render.com](https://render.com) dan login dengan GitHub.
+2. Klik **New +** → **Background Worker**.
+3. Pilih repository GitHub bot ini.
+4. Isi konfigurasi:
+   - **Name**: bebas, misalnya `bot-swing-idx`
+   - **Region**: Singapore (paling dekat ke Indonesia)
+   - **Branch**: `main`
+   - **Runtime**: Node
+   - **Build Command**: `npm install`
+   - **Start Command**: `npm start`
+   - **Instance Type**: Free
+5. Di bagian **Environment Variables**, tambahkan:
+   - `BOT_TOKEN` = token dari BotFather
+   - `CHAT_ID` = chat id tujuan
+6. Klik **Create Background Worker**. Render akan build & jalankan otomatis.
+7. Cek tab **Logs** — pastikan muncul `🤖 Bot Swing Trading BEI berjalan...`.
+
+> Catatan: paket free Render tidak mem-sleep Background Worker (berbeda dengan Web Service
+> free yang sleep saat idle), sehingga cron job tetap jalan 24/7.
+
+### 2B. Deploy ke Railway.app (alternatif)
+
+1. Buat akun di [railway.app](https://railway.app) dan login dengan GitHub.
+2. Klik **New Project** → **Deploy from GitHub repo** → pilih repo bot ini.
+3. Setelah project terbuat, buka tab **Variables** dan tambahkan:
+   - `BOT_TOKEN` = token dari BotFather
+   - `CHAT_ID` = chat id tujuan
+4. Buka tab **Settings**:
+   - **Start Command**: `npm start`
+   - Pastikan service ini **bukan** dikonfigurasi sebagai service dengan public networking/port
+     (bot tidak butuh port, cukup proses berjalan terus).
+5. Railway otomatis build (`npm install`) dan menjalankan `npm start`.
+6. Cek tab **Deployments → Logs** untuk memastikan bot aktif.
+
+> Catatan: Railway free tier menggunakan sistem kuota jam/kredit bulanan. Pantau penggunaan di
+> dashboard agar bot tidak berhenti karena kuota habis.
+
+### 3. Verifikasi Bot Aktif 24/7
+
+- Kirim `/scan` ke bot dari Telegram — harus dapat balasan meski laptop Anda mati/tertutup.
+- Tunggu hingga Senin–Jumat pukul 18:30 WIB untuk memastikan notifikasi otomatis terkirim ke
+  `CHAT_ID`.
+- Jika ingin mengubah jadwal atau ambang likuiditas tanpa mengubah kode, set environment
+  variable tambahan (opsional) di platform hosting: `CRON_SCHEDULE`, `MIN_PRICE`,
+  `MIN_TRANSACTION_VALUE`, `HISTORY_DAYS`, `SCAN_CONCURRENCY` (lihat `.env.example`).
+
+## Environment Variables
+
+| Variable | Wajib | Default | Keterangan |
+|---|---|---|---|
+| `BOT_TOKEN` | ✅ | - | Token bot dari BotFather |
+| `CHAT_ID` | ✅ | - | Chat/grup tujuan notifikasi otomatis |
+| `CRON_SCHEDULE` | ❌ | `30 18 * * 1-5` | Format cron, default Senin-Jumat 18:30 |
+| `TZ_NAME` | ❌ | `Asia/Jakarta` | Timezone cron |
+| `MIN_PRICE` | ❌ | `100` | Ambang harga minimum (Rp) |
+| `MIN_TRANSACTION_VALUE` | ❌ | `3000000000` | Ambang nilai transaksi harian minimum (Rp) |
+| `HISTORY_DAYS` | ❌ | `200` | Rentang hari kalender data historis yang diambil |
+| `SCAN_CONCURRENCY` | ❌ | `5` | Jumlah request paralel ke Yahoo Finance saat scan |
+
+## Command Telegram
+
+- `/start` — cek bot aktif.
+- `/scan` — jalankan pemindaian manual ke seluruh universum saham dan kirim hasilnya.
