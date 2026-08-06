@@ -1,28 +1,33 @@
 # Bot Telegram Swing Trading BEI/IDX
 
 Bot Telegram (Node.js/ESM) yang memindai saham likuid di Bursa Efek Indonesia dan mengirim
-notifikasi sinyal **Bullish Pullback** untuk swing trading, berdasarkan data EOD resmi dari
-Yahoo Finance (EMA 20, EMA 50, RSI 14). Berjalan otomatis setiap Senin–Jumat pukul 18:30 WIB via
-`node-cron`, dan bisa dipicu manual dengan command `/scan`.
+notifikasi 4 kategori sinyal (Bullish Pullback, Bullish Reversal, Volume Spike, Top Gainers)
+untuk swing & intraday trading, berdasarkan data EOD resmi dari Yahoo Finance (EMA 20, EMA 50,
+RSI 14, ATR 14). Berjalan otomatis setiap Senin–Jumat pukul 18:30 WIB via `node-cron`, dan bisa
+dipicu manual dengan command `/scan`.
 
 ## Struktur Proyek
 
 ```
 .
-├── index.js                       # Entry point: launch bot + start cron
+├── index.js                       # Entry point: launch bot + start cron + health server
+├── scripts/scan-and-notify.js     # Script one-off untuk GitHub Actions (scan lalu keluar)
 ├── src/
 │   ├── config/env.js              # Load & validasi .env
-│   ├── data/stockUniverse.js      # Universum ticker LQ45/Kompas100 (.JK)
+│   ├── data/stockUniverse.js      # Universum ticker LQ45/Kompas100 + mid/small cap (.JK)
 │   ├── services/
 │   │   ├── marketData.js          # Fetch data EOD dari yahoo-finance2
-│   │   ├── indicatorEngine.js     # Hitung EMA20/EMA50/RSI14
-│   │   ├── signalDetector.js      # Filter likuiditas + logika sinyal
-│   │   └── scanner.js             # Orkestrasi scan seluruh universum
+│   │   ├── indicatorEngine.js     # Hitung series EMA20/EMA50/RSI14/ATR14
+│   │   ├── tradePlan.js           # Hitung Entry/Take Profit/Stop Loss berbasis ATR
+│   │   ├── signalDetector.js      # Filter likuiditas + deteksi semua kategori sinyal
+│   │   └── scanner.js             # Orkestrasi scan seluruh universum + ranking top gainers
 │   ├── telegram/
-│   │   ├── bot.js                 # Instance Telegraf + command /start /scan
-│   │   └── formatter.js           # Format pesan Markdown
+│   │   ├── bot.js                 # Instance Telegraf + command /start /scan /help
+│   │   └── formatter.js           # Format pesan Markdown per kategori
 │   ├── scheduler/cron.js          # Jadwal node-cron Asia/Jakarta
+│   ├── server/healthServer.js     # HTTP health-check (untuk Render Web Service)
 │   └── utils/concurrencyLimiter.js
+├── .github/workflows/scan.yml     # GitHub Actions: scan terjadwal + manual trigger
 ├── .env.example
 ├── .gitignore
 └── package.json
@@ -30,16 +35,35 @@ Yahoo Finance (EMA 20, EMA 50, RSI 14). Berjalan otomatis setiap Senin–Jumat p
 
 ## Logika Sinyal
 
-1. **Filter likuiditas** (dicek sebelum indikator dihitung):
-   - Close terakhir > Rp 100
-   - Nilai transaksi harian (Close × Volume) > Rp 3.000.000.000
-2. **Sinyal Beli — Bullish Pullback** (butuh minimal 100 candle harian):
-   - Uptrend: `Close > EMA20` dan `EMA20 > EMA50`
-   - Pullback sehat: `RSI(14)` berada di rentang `35–48`
-3. **Entry / Take Profit / Stop Loss** (berbasis ATR(14), volatilitas masing-masing saham):
-   - Entry = Close terakhir
-   - Stop Loss = Entry − 1.5 × ATR(14)
-   - Take Profit = Entry + 2 × risk (risk = Entry − Stop Loss), sehingga Risk:Reward ≈ 1:2
+**Filter likuiditas** dijalankan lebih dulu untuk semua kategori (butuh minimal 100 candle
+harian per ticker):
+- Close terakhir > Rp 100
+- Nilai transaksi harian (Close × Volume) > Rp 3.000.000.000
+
+Setelah lolos likuiditas, tiap ticker dicek terhadap 3 kategori sinyal (satu ticker bisa masuk
+lebih dari satu kategori sekaligus):
+
+1. **🟢 Bullish Pullback** (swing) — `Close > EMA20 > EMA50` (uptrend) dan `RSI(14)` di rentang
+   `35–48` (koreksi sehat dalam tren naik).
+2. **🔄 Bullish Reversal** (swing/intraday) — salah satu dari:
+   - **Golden Cross**: `EMA20` baru memotong ke atas `EMA50` hari ini (kemarin masih di bawah).
+   - **RSI Oversold Recovery**: `RSI(14)` kemarin < 30, hari ini rebound ke ≥ 30, dan harga naik
+     dari penutupan kemarin.
+3. **🚀 Volume Spike** (intraday) — volume hari ini ≥ 2× rata-rata volume 20 hari **dan** harga
+   naik ≥ 3% dari penutupan kemarin.
+
+Selain 3 kategori di atas, bot juga menampilkan **🔥 Top Gainers Hari Ini** — ranking saham
+likuid dengan kenaikan harga harian terbesar (murni informasi tren pasar, bukan sinyal beli).
+
+**Entry / Take Profit / Stop Loss** (berbasis ATR(14), berlaku untuk Pullback & Reversal &
+Volume Spike):
+- Entry = Close terakhir
+- Stop Loss = Entry − 1.5 × ATR(14)
+- Take Profit = Entry + 2 × risk (risk = Entry − Stop Loss), sehingga Risk:Reward ≈ 1:2
+
+> Catatan risiko: Golden Cross bisa saja terjadi saat RSI sudah tinggi/overbought (mengejar
+> saham yang sudah naik besar hari itu). Selalu cek kondisi RSI & konteks pasar sebelum entry,
+> jangan hanya mengandalkan satu kategori sinyal.
 
 ## Setup Lokal
 
@@ -189,8 +213,13 @@ git push -u origin main
 | `MIN_TRANSACTION_VALUE` | ❌ | `3000000000` | Ambang nilai transaksi harian minimum (Rp) |
 | `HISTORY_DAYS` | ❌ | `200` | Rentang hari kalender data historis yang diambil |
 | `SCAN_CONCURRENCY` | ❌ | `5` | Jumlah request paralel ke Yahoo Finance saat scan |
+| `VOLUME_SPIKE_RATIO` | ❌ | `2` | Ambang rasio volume hari ini vs rata-rata 20 hari |
+| `VOLUME_SPIKE_MIN_GAIN_PCT` | ❌ | `3` | Ambang minimum kenaikan harga (%) untuk kategori Volume Spike |
+| `RSI_OVERSOLD_THRESHOLD` | ❌ | `30` | Ambang RSI oversold untuk deteksi Bullish Reversal |
+| `TOP_GAINERS_COUNT` | ❌ | `5` | Jumlah saham yang ditampilkan di ranking Top Gainers |
 
 ## Command Telegram
 
 - `/start` — cek bot aktif.
-- `/scan` — jalankan pemindaian manual ke seluruh universum saham dan kirim hasilnya.
+- `/scan` — jalankan pemindaian manual ke seluruh universum saham (4 kategori sinyal) dan kirim hasilnya.
+- `/help` — tampilkan daftar command.

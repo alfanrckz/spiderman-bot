@@ -1,6 +1,6 @@
 import cron from 'node-cron';
 import { config } from '../config/env.js';
-import { runSwingScan } from '../services/scanner.js';
+import { runSwingScan, countActionableSignals } from '../services/scanner.js';
 import { sendScanResultToChat } from '../telegram/bot.js';
 
 export function startScheduledScan() {
@@ -9,9 +9,9 @@ export function startScheduledScan() {
     async () => {
       console.log('[cron] Menjalankan scan terjadwal...');
       try {
-        const signals = await runSwingScan();
-        await sendScanResultToChat(signals);
-        console.log(`[cron] Scan selesai. ${signals.length} sinyal ditemukan.`);
+        const result = await runSwingScan();
+        await sendScanResultToChat(result);
+        console.log(`[cron] Scan selesai. ${countActionableSignals(result)} sinyal ditemukan.`);
       } catch (error) {
         console.error('[cron] Gagal menjalankan scan terjadwal:', error);
       }

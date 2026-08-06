@@ -30,8 +30,8 @@ bot.command('scan', async (ctx) => {
   await ctx.reply('⏳ Memindai saham likuid BEI, mohon tunggu...');
 
   try {
-    const signals = await runSwingScan();
-    const messages = formatScanSummary(signals);
+    const result = await runSwingScan();
+    const messages = formatScanSummary(result);
 
     for (const message of messages) {
       await ctx.replyWithMarkdown(message);
@@ -42,8 +42,8 @@ bot.command('scan', async (ctx) => {
   }
 });
 
-export async function sendScanResultToChat(signals) {
-  const messages = formatScanSummary(signals);
+export async function sendScanResultToChat(result) {
+  const messages = formatScanSummary(result);
 
   for (const message of messages) {
     await bot.telegram.sendMessage(config.chatId, message, { parse_mode: 'Markdown' });

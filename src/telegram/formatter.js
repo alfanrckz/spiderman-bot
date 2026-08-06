@@ -3,57 +3,130 @@ const decimalFormatter = new Intl.NumberFormat('id-ID', {
   minimumFractionDigits: 2,
   maximumFractionDigits: 2,
 });
+const signedDecimalFormatter = new Intl.NumberFormat('id-ID', {
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+  signDisplay: 'always',
+});
 
 const TELEGRAM_MAX_MESSAGE_LENGTH = 4096;
 
-export function formatSignalMessage(signal) {
+function tickerCodeOf(signal) {
+  return signal.ticker.replace('.JK', '');
+}
+
+function formatBaseLines(signal) {
   const transactionInBillions = signal.transactionValue / 1_000_000_000;
-  const tickerCode = signal.ticker.replace('.JK', '');
-  const potentialGainPct = ((signal.takeProfit - signal.entry) / signal.entry) * 100;
-  const potentialLossPct = ((signal.entry - signal.stopLoss) / signal.entry) * 100;
 
   return [
-    `🟢 *SINYAL BUY - BULLISH PULLBACK*`,
-    ``,
-    `📌 #${tickerCode}`,
-    `💰 Harga Penutupan: Rp ${integerFormatter.format(signal.lastClose)}`,
+    `📌 #${tickerCodeOf(signal)}`,
+    `💰 Harga Penutupan: Rp ${integerFormatter.format(signal.lastClose)} (${signedDecimalFormatter.format(signal.pctChangeToday)}%)`,
     `📊 Nilai Transaksi: Rp ${decimalFormatter.format(transactionInBillions)} Miliar`,
     `📈 RSI (14): ${decimalFormatter.format(signal.rsi14)}`,
-    `📉 EMA 20: ${integerFormatter.format(signal.ema20)}`,
-    `📉 EMA 50: ${integerFormatter.format(signal.ema50)}`,
-    ``,
+    `📉 EMA 20: ${integerFormatter.format(signal.ema20)} | EMA 50: ${integerFormatter.format(signal.ema50)}`,
+  ];
+}
+
+function formatTradeLines(signal) {
+  const gainPct = ((signal.takeProfit - signal.entry) / signal.entry) * 100;
+  const lossPct = ((signal.entry - signal.stopLoss) / signal.entry) * 100;
+
+  return [
     `🎯 *Entry:* Rp ${integerFormatter.format(signal.entry)}`,
-    `✅ *Take Profit:* Rp ${integerFormatter.format(signal.takeProfit)} (+${decimalFormatter.format(potentialGainPct)}%)`,
-    `🛑 *Stop Loss:* Rp ${integerFormatter.format(signal.stopLoss)} (-${decimalFormatter.format(potentialLossPct)}%)`,
+    `✅ *Take Profit:* Rp ${integerFormatter.format(signal.takeProfit)} (+${decimalFormatter.format(gainPct)}%)`,
+    `🛑 *Stop Loss:* Rp ${integerFormatter.format(signal.stopLoss)} (-${decimalFormatter.format(lossPct)}%)`,
     `⚖️ Risk:Reward ≈ 1:2 (ATR14 = ${integerFormatter.format(signal.atr14)})`,
+  ];
+}
+
+function formatBullishPullbackBlock(signal) {
+  return [
+    `🟢 *BULLISH PULLBACK*`,
     ``,
-    `📝 Tren naik sehat (Close > EMA20 > EMA50), RSI berada di zona pullback (35-48). Potensi entry swing trading jangka pendek. Bukan nasihat keuangan — selalu gunakan manajemen risiko Anda sendiri.`,
+    ...formatBaseLines(signal),
+    ``,
+    ...formatTradeLines(signal),
+    ``,
+    `📝 Tren naik sehat (Close > EMA20 > EMA50), RSI di zona pullback (35-48). Cocok untuk entry swing.`,
   ].join('\n');
 }
 
-// Mengembalikan array pesan (chunk) agar tidak melebihi batas 4096 karakter Telegram.
-export function formatScanSummary(signals) {
-  if (signals.length === 0) {
-    return ['🔍 *Hasil Scan Swing Trading BEI*\n\nTidak ada saham yang memenuhi kriteria sinyal beli saat ini.'];
+function formatBullishReversalBlock(signal) {
+  return [
+    `🔄 *BULLISH REVERSAL*`,
+    ``,
+    ...formatBaseLines(signal),
+    ``,
+    ...formatTradeLines(signal),
+    ``,
+    `📝 ${signal.reversalReason}. Potensi awal tren naik baru — cocok untuk swing/intraday.`,
+  ].join('\n');
+}
+
+function formatVolumeSpikeBlock(signal) {
+  return [
+    `🚀 *VOLUME SPIKE*`,
+    ``,
+    ...formatBaseLines(signal),
+    `🔊 Volume: ${decimalFormatter.format(signal.volumeRatio)}x rata-rata 20 hari`,
+    ``,
+    ...formatTradeLines(signal),
+    ``,
+    `📝 Lonjakan volume dibarengi harga naik ${decimalFormatter.format(signal.pctChangeToday)}% — indikasi minat beli besar, pantau untuk intraday/swing cepat.`,
+  ].join('\n');
+}
+
+function formatTopGainerLine(signal, rank) {
+  const transactionInBillions = signal.transactionValue / 1_000_000_000;
+  return `${rank}. #${tickerCodeOf(signal)} — Rp ${integerFormatter.format(signal.lastClose)} (${signedDecimalFormatter.format(signal.pctChangeToday)}%), Value Rp ${decimalFormatter.format(transactionInBillions)} M`;
+}
+
+function buildSectionBlocks(title, items, blockFormatter, emptyText) {
+  if (items.length === 0) {
+    return [`${title}\n${emptyText}`];
   }
 
-  const header = `🔍 *Hasil Scan Swing Trading BEI*\nDitemukan ${signals.length} saham dengan sinyal beli:`;
-  const blocks = signals.map(formatSignalMessage);
+  return [`${title}\nDitemukan ${items.length} kandidat:`, ...items.map(blockFormatter)];
+}
 
+function chunkBlocks(blocks) {
   const chunks = [];
-  let currentChunk = header;
+  let current = '';
 
   for (const block of blocks) {
-    const candidate = `${currentChunk}\n\n———\n\n${block}`;
+    const candidate = current ? `${current}\n\n———\n\n${block}` : block;
 
     if (candidate.length > TELEGRAM_MAX_MESSAGE_LENGTH) {
-      chunks.push(currentChunk);
-      currentChunk = block;
+      if (current) chunks.push(current);
+      current = block;
     } else {
-      currentChunk = candidate;
+      current = candidate;
     }
   }
 
-  chunks.push(currentChunk);
+  if (current) chunks.push(current);
   return chunks;
+}
+
+// Mengembalikan array pesan (chunk) agar tidak melebihi batas 4096 karakter Telegram.
+export function formatScanSummary(result) {
+  const emptyText = '_Tidak ada kandidat saat ini._';
+
+  const blocks = [
+    `🔍 *Hasil Scan Saham BEI (Swing & Intraday)*`,
+    ...buildSectionBlocks('🟢 *Bullish Pullback* (swing)', result.bullishPullback, formatBullishPullbackBlock, emptyText),
+    ...buildSectionBlocks('🔄 *Bullish Reversal* (swing/intraday)', result.bullishReversal, formatBullishReversalBlock, emptyText),
+    ...buildSectionBlocks('🚀 *Volume Spike* (intraday)', result.volumeSpike, formatVolumeSpikeBlock, emptyText),
+  ];
+
+  if (result.topGainers.length > 0) {
+    blocks.push(
+      [
+        `🔥 *Top ${result.topGainers.length} Gainers Hari Ini* (trending, bukan sinyal beli)`,
+        ...result.topGainers.map((signal, index) => formatTopGainerLine(signal, index + 1)),
+      ].join('\n')
+    );
+  }
+
+  return chunkBlocks(blocks);
 }
