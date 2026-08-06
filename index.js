@@ -1,8 +1,10 @@
 import { config } from './src/config/env.js';
 import { bot } from './src/telegram/bot.js';
 import { startScheduledScan } from './src/scheduler/cron.js';
+import { startHealthServer } from './src/server/healthServer.js';
 
 async function main() {
+  startHealthServer();
   startScheduledScan();
   await bot.launch();
   console.log(`🤖 Bot Swing Trading BEI berjalan (chat tujuan: ${config.chatId}).`);

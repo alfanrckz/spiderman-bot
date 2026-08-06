@@ -71,9 +71,14 @@ Yahoo Finance (EMA 20, EMA 50, RSI 14). Berjalan otomatis setiap Senin–Jumat p
 
 ## Panduan Deploy Gratis 24/7
 
-Karena bot ini menggunakan Telegraf **long polling** (bukan webhook) dan `node-cron` internal,
-bot harus dijalankan sebagai **Background Worker**, bukan Web Service — proses ini tidak
-membuka port HTTP.
+Render.com sudah tidak menyediakan instance **Free** untuk tipe **Background Worker** (hanya
+tersedia mulai paket berbayar). Instance Free hanya ada untuk tipe **Web Service**, tapi Web
+Service free otomatis *sleep* setelah ±15 menit tanpa trafik HTTP.
+
+Solusinya: bot ini sudah dilengkapi health-check server kecil ([src/server/healthServer.js](src/server/healthServer.js))
+yang membuka port HTTP, jadi bisa dideploy sebagai **Web Service** gratis. Agar tidak pernah
+sleep, tambahkan monitor gratis dari **UptimeRobot** yang melakukan ping ke URL bot setiap
+beberapa menit (langkah 2A di bawah).
 
 ### 1. Siapkan Repository GitHub
 
@@ -94,10 +99,10 @@ git branch -M main
 git push -u origin main
 ```
 
-### 2A. Deploy ke Render.com (Background Worker — gratis)
+### 2A. Deploy ke Render.com (Web Service gratis + UptimeRobot anti-sleep)
 
 1. Buat akun di [render.com](https://render.com) dan login dengan GitHub.
-2. Klik **New +** → **Background Worker**.
+2. Klik **New +** → **Web Service**.
 3. Pilih repository GitHub bot ini.
 4. Isi konfigurasi:
    - **Name**: bebas, misalnya `bot-swing-idx`
@@ -110,11 +115,17 @@ git push -u origin main
 5. Di bagian **Environment Variables**, tambahkan:
    - `BOT_TOKEN` = token dari BotFather
    - `CHAT_ID` = chat id tujuan
-6. Klik **Create Background Worker**. Render akan build & jalankan otomatis.
-7. Cek tab **Logs** — pastikan muncul `🤖 Bot Swing Trading BEI berjalan...`.
-
-> Catatan: paket free Render tidak mem-sleep Background Worker (berbeda dengan Web Service
-> free yang sleep saat idle), sehingga cron job tetap jalan 24/7.
+6. Klik **Create Web Service**. Render akan build & jalankan otomatis, lalu memberi URL publik
+   seperti `https://bot-swing-idx.onrender.com`.
+7. Cek tab **Logs** — pastikan muncul `🤖 Bot Swing Trading BEI berjalan...` dan
+   `[server] Health check server listening on port ...`.
+8. **Cegah sleep** dengan [UptimeRobot](https://uptimerobot.com) (gratis):
+   - Daftar/login → **Add New Monitor**.
+   - **Monitor Type**: HTTP(s)
+   - **URL**: URL Render Anda (langkah 6)
+   - **Monitoring Interval**: 5 menit (harus < 15 menit agar service tidak sleep)
+   - Simpan. Selama UptimeRobot terus ping, service tidak akan sleep sehingga cron 18:30 dan
+     `/scan` tetap responsif 24/7.
 
 ### 2B. Deploy ke Railway.app (alternatif)
 
