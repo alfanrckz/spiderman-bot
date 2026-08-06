@@ -27,6 +27,21 @@ const TICKER_CODES = [
   'CMNP', 'TOTL', 'META', 'CSAP', 'ITMA', 'HRTA', 'MARK',
   // Agrikultur
   'AALI', 'LSIP', 'SIMP', 'SMAR', 'DSNG', 'TAPG',
+
+  // --- Mid Cap & Small Cap (di luar inti LQ45/Kompas100) ---
+  // Properti & Konstruksi
+  'BEST', 'KIJA', 'MTLA', 'LPKR', 'DUTI', 'GPRA', 'RDTX', 'NRCA', 'WTON', 'PBSA',
+  // Consumer & Ritel
+  'KINO', 'HOKI', 'CAMP', 'CLEO', 'DLTA', 'GOOD', 'TCID', 'MIDI', 'RANC',
+  // Basic Material & Industri
+  'ARNA', 'IMPC', 'SRSN', 'ALKA', 'INCI', 'ISSP', 'KDSI', 'GJTL', 'AUTO', 'SMSM',
+  'IMAS', 'BOLT', 'DRMA',
+  // Pertambangan & Energi
+  'DOID', 'TOBA', 'GEMS', 'KKGI', 'ABMM', 'BSSR', 'PSAB', 'RAJA', 'TGRA', 'POWR',
+  // Perbankan & Keuangan kecil-menengah
+  'BJBR', 'BJTM', 'BACA', 'AGRO', 'BBSI', 'MAYA',
+  // Agrikultur
+  'SGRO', 'TBLA', 'ANJT', 'BWPT',
 ];
 
 export const STOCK_UNIVERSE = TICKER_CODES.map((code) => `${code}.JK`);
