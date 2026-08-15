@@ -4,7 +4,8 @@ Bot Telegram (Node.js/ESM) yang memindai (hampir) seluruh saham tercatat di Burs
 dan mengirim notifikasi 4 kategori sinyal (Bullish Pullback, Bullish Reversal, Volume Spike,
 Akumulasi Tersembunyi) untuk swing & intraday trading, berdasarkan data EOD resmi dari Yahoo
 Finance (EMA 20, EMA 50, RSI 14, ATR 14, OBV). Berjalan otomatis setiap Senin–Jumat pukul 18:30
-WIB via `node-cron`, dan bisa dipicu manual dengan command `/scan`.
+WIB via `node-cron`, bisa dipicu manual dengan command `/scan`, dan bisa melacak status posisi
+Anda sendiri lewat `/entry`, `/posisi`, `/close`.
 
 ## Struktur Proyek
 
@@ -12,25 +13,29 @@ WIB via `node-cron`, dan bisa dipicu manual dengan command `/scan`.
 .
 ├── index.js                       # Entry point: launch bot + start cron + health server
 ├── scripts/
-│   ├── scan-and-notify.js         # Script one-off untuk GitHub Actions (scan lalu keluar)
+│   ├── scan-and-notify.js         # Script one-off untuk GitHub Actions (scan + evaluasi posisi)
 │   └── fetch-idx-universe.js      # Refresh daftar ticker dari dataset publik IDX
 ├── src/
 │   ├── config/env.js              # Load & validasi .env
 │   ├── data/
 │   │   ├── stockUniverse.js       # Baca idxUniverse.json, tambahkan suffix .JK
-│   │   └── idxUniverse.json       # Hasil generate fetch-idx-universe.js (jangan edit manual)
+│   │   ├── idxUniverse.json       # Hasil generate fetch-idx-universe.js (jangan edit manual)
+│   │   └── positions.json         # State posisi yang dilacak via /entry (auto commit ke git)
 │   ├── services/
 │   │   ├── marketData.js          # Fetch data EOD dari yahoo-finance2
-│   │   ├── indicatorEngine.js     # Hitung series EMA20/EMA50/RSI14/ATR14
+│   │   ├── indicatorEngine.js     # Hitung series EMA20/EMA50/RSI14/ATR14/OBV
 │   │   ├── tradePlan.js           # Hitung Entry/Take Profit/Stop Loss berbasis ATR
 │   │   ├── signalDetector.js      # Filter likuiditas + deteksi semua kategori sinyal
-│   │   └── scanner.js             # Orkestrasi scan seluruh universum + ranking top gainers
+│   │   ├── scanner.js             # Orkestrasi scan seluruh universum
+│   │   └── positionTracker.js     # /entry /close + evaluasi status posisi (HOLD/TP/SL/invalid)
 │   ├── telegram/
-│   │   ├── bot.js                 # Instance Telegraf + command /start /scan /help
-│   │   └── formatter.js           # Format pesan Markdown per kategori
+│   │   ├── bot.js                 # Instance Telegraf + command /start /scan /entry /posisi /close /help
+│   │   └── formatter.js           # Format pesan Markdown per kategori & status posisi
 │   ├── scheduler/cron.js          # Jadwal node-cron Asia/Jakarta
 │   ├── server/healthServer.js     # HTTP health-check (untuk Render Web Service)
-│   └── utils/concurrencyLimiter.js
+│   └── utils/
+│       ├── concurrencyLimiter.js
+│       └── gitSync.js             # Commit+push otomatis positions.json (git sebagai "database")
 ├── .github/workflows/scan.yml     # GitHub Actions: scan terjadwal + manual trigger
 ├── .env.example
 ├── .gitignore
@@ -100,6 +105,36 @@ sudah naik terlalu jauh di hari yang sama — mengurangi risiko entry di puncak 
 - Entry = Close terakhir
 - Stop Loss = Entry − 1.5 × ATR(14)
 - Take Profit = Entry + 2 × risk (risk = Entry − Stop Loss), sehingga Risk:Reward ≈ 1:2
+
+## Pelacakan Posisi (/entry, /posisi, /close)
+
+Bot ini stateless secara desain — tanpa Anda beri tahu, dia tidak tahu saham apa yang benar-benar
+Anda beli. Fitur ini menambahkan lapisan pelacakan posisi manual:
+
+1. **`/entry TICKER [harga]`** — setelah Anda benar-benar beli, beri tahu bot. Harga opsional
+   (default pakai Close terakhir); isi manual kalau harga beli Anda beda (mis. `/entry SMRA 335`).
+2. **`/posisi`** — cek status semua posisi yang dilacak, kapan saja. Statusnya:
+   - 🟢/🟡 **HOLD** — masih sesuai rencana, belum ada alasan keluar.
+   - ✅ **TAKE PROFIT HIT** — harga sudah capai TP, otomatis dihapus dari daftar.
+   - 🛑 **STOP LOSS HIT** — harga sudah tembus SL, otomatis dihapus dari daftar.
+   - ⚠️ **REKOMENDASI KELUAR** — tesis awal sinyal sudah rusak meski SL/TP belum kena (mis. tren
+     balik turun di bawah EMA50/EMA20, atau dead cross EMA20/EMA50). Ini rekomendasi, bukan
+     otomatis — posisi tetap ada di daftar sampai Anda `/close` manual.
+3. **`/close TICKER`** — berhenti melacak (dipakai setelah Anda benar-benar jual/keluar).
+
+Status posisi juga otomatis dikirim bersamaan dengan hasil `/scan` dan scan terjadwal 18:30 WIB
+(kalau ada posisi yang dilacak).
+
+**Bagaimana state-nya tersimpan:** `src/data/positions.json` di-commit & push otomatis ke
+repository setiap ada perubahan (git dipakai sebagai "database" gratis, tanpa perlu layanan
+database terpisah). Konsekuensinya:
+- `/entry`, `/close`, dan `/posisi` **hanya berfungsi selagi bot interaktif (`npm start` /
+  `index.js`) sedang berjalan** — mode GitHub Actions terjadwal cuma bisa mengevaluasi &
+  menghapus posisi otomatis (TP/SL hit), tidak bisa menerima command baru dari Anda.
+- Proses yang menjalankan `index.js` butuh akses git push ke repo ini (kredensial & identity git
+  sudah otomatis tersedia kalau dijalankan di komputer/VPS yang sama dengan tempat Anda develop).
+- Kalau commit/push gagal (mis. tidak ada koneksi/kredensial), perubahan tetap tersimpan lokal
+  dan bot tidak crash — cuma tidak ter-sinkron ke repo sampai push berikutnya berhasil.
 
 ## Setup Lokal
 
@@ -259,4 +294,7 @@ git push -u origin main
 
 - `/start` — cek bot aktif.
 - `/scan` — jalankan pemindaian manual ke seluruh universum saham (4 kategori sinyal) dan kirim hasilnya.
+- `/entry TICKER [harga]` — mulai lacak posisi (lihat [Pelacakan Posisi](#pelacakan-posisi-entry-posisi-close)).
+- `/posisi` — cek status semua posisi yang dilacak.
+- `/close TICKER` — berhenti melacak posisi.
 - `/help` — tampilkan daftar command.

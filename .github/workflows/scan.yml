@@ -6,6 +6,9 @@ on:
     - cron: '30 11 * * 1-5'
   workflow_dispatch: {}
 
+permissions:
+  contents: write
+
 jobs:
   scan:
     runs-on: ubuntu-latest
@@ -21,6 +24,11 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Setup git identity (untuk auto-commit status posisi)
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
 
       - name: Jalankan scan & kirim notifikasi
         run: npm run scan

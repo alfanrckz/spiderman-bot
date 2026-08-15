@@ -88,6 +88,51 @@ function formatHiddenAccumulationBlock(signal) {
   ].join('\n');
 }
 
+const CATEGORY_LABELS = {
+  bullishPullback: 'Bullish Pullback',
+  bullishReversal: 'Bullish Reversal',
+  volumeSpike: 'Volume Spike',
+  hiddenAccumulation: 'Akumulasi Tersembunyi',
+};
+
+function formatPositionBlock(evaluated) {
+  const tickerCode = tickerCodeOf(evaluated);
+  const categoryLabel = evaluated.category ? CATEGORY_LABELS[evaluated.category] : 'Manual';
+
+  const lines = [
+    `📌 #${tickerCode} (${categoryLabel})`,
+    `Entry: Rp ${integerFormatter.format(evaluated.entry)} | Sekarang: Rp ${integerFormatter.format(evaluated.lastClose)} (${signedDecimalFormatter.format(evaluated.pnlPct)}%)`,
+    `SL: Rp ${integerFormatter.format(evaluated.stopLoss)} | TP: Rp ${integerFormatter.format(evaluated.takeProfit)}`,
+  ];
+
+  if (evaluated.status === 'TAKE_PROFIT_HIT') {
+    lines.unshift(`✅ *TAKE PROFIT HIT — KELUAR*`);
+    lines.push(`📝 ${evaluated.reason} Posisi otomatis dihapus dari daftar.`);
+  } else if (evaluated.status === 'STOP_LOSS_HIT') {
+    lines.unshift(`🛑 *STOP LOSS HIT — KELUAR*`);
+    lines.push(`📝 ${evaluated.reason} Posisi otomatis dihapus dari daftar.`);
+  } else if (evaluated.status === 'INVALIDATED') {
+    lines.unshift(`⚠️ *REKOMENDASI KELUAR*`);
+    lines.push(`📝 ${evaluated.reason} Gunakan /close ${tickerCode} kalau sudah Anda tutup posisinya.`);
+  } else {
+    lines.unshift(evaluated.pnlPct >= 0 ? `🟢 *HOLD*` : `🟡 *HOLD*`);
+  }
+
+  return lines.join('\n');
+}
+
+// Mengembalikan array pesan (chunk) status posisi yang sedang dilacak via /entry.
+export function formatPositionsSummary(evaluatedPositions) {
+  if (evaluatedPositions.length === 0) {
+    return [
+      '📁 *Status Posisi Anda*\n_Belum ada posisi yang dilacak. Gunakan /entry TICKER setelah Anda benar-benar entry._',
+    ];
+  }
+
+  const header = `📁 *Status Posisi Anda* (${evaluatedPositions.length} posisi)`;
+  return chunkBlocks([header, ...evaluatedPositions.map(formatPositionBlock)]);
+}
+
 function buildSectionBlocks(title, items, blockFormatter, emptyText) {
   if (items.length === 0) {
     return [`${title}\n${emptyText}`];
