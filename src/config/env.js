@@ -22,4 +22,5 @@ export const config = {
   volumeSpikeMinGainPct: Number(process.env.VOLUME_SPIKE_MIN_GAIN_PCT || 3),
   rsiOversoldThreshold: Number(process.env.RSI_OVERSOLD_THRESHOLD || 30),
   rsiOverboughtThreshold: Number(process.env.RSI_OVERBOUGHT_THRESHOLD || 70),
+  hiddenAccumulationMinAvgValue: Number(process.env.HIDDEN_ACCUMULATION_MIN_AVG_VALUE || 10_000_000_000),
 };

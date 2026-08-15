@@ -77,11 +77,18 @@ export async function analyzeTicker(ticker) {
   // Akumulasi Tersembunyi (proxy volume, bukan bandarmology broker asli): OBV bikin rekor
   // tertinggi baru dalam N hari terakhir, tapi harga belum ikut bikin rekor tertinggi — indikasi
   // volume beli menumpuk duluan sebelum harga benar-benar bergerak.
+  // OBV gampang "ketipu" oleh saham tidak likuid: satu transaksi besar di saham thin bisa bikin
+  // OBV rekor baru padahal cuma noise. Karena itu kategori ini butuh rata-rata nilai transaksi
+  // 20 hari yang jauh lebih tinggi dari ambang likuiditas dasar, bukan cuma nilai hari ini.
+  const recentCandles = history.slice(-OBV_DIVERGENCE_LOOKBACK);
   const recentObv = obv.slice(-OBV_DIVERGENCE_LOOKBACK);
-  const recentClosesForObv = history.slice(-OBV_DIVERGENCE_LOOKBACK).map((candle) => candle.close);
+  const avgTransactionValue =
+    recentCandles.reduce((sum, candle) => sum + candle.close * candle.volume, 0) / recentCandles.length;
+  const isConsistentlyLiquid = avgTransactionValue >= config.hiddenAccumulationMinAvgValue;
   const obvMadeNewHigh = recentObv.at(-1) === Math.max(...recentObv);
-  const priceMadeNewHigh = recentClosesForObv.at(-1) === Math.max(...recentClosesForObv);
-  const hiddenAccumulation = obvMadeNewHigh && !priceMadeNewHigh && isNotOverbought;
+  const priceMadeNewHigh = lastClose === Math.max(...recentCandles.map((candle) => candle.close));
+  const hiddenAccumulation =
+    obvMadeNewHigh && !priceMadeNewHigh && isNotOverbought && isConsistentlyLiquid;
 
   const tradePlan = buildTradePlan(lastClose, lastAtr);
 

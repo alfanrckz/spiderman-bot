@@ -54,13 +54,21 @@ lebih dari satu kategori sekaligus):
    ≥ 3% dari penutupan kemarin, dan RSI belum overbought (`< 70`).
 4. **🐋 Akumulasi Tersembunyi** (proxy volume, *bukan* bandarmology broker asli) — OBV
    (On-Balance Volume) mencetak rekor tertinggi baru dalam 20 hari terakhir, tapi harga **belum**
-   ikut mencetak rekor tertinggi, dan RSI belum overbought. Indikasi volume beli menumpuk lebih
-   dulu sebelum harga bergerak. Ini hanya proxy dari data harga & volume publik (Yahoo Finance) —
-   bukan analisis broker summary/asing net buy seperti bandarmology yang sesungguhnya, karena
-   data itu tidak tersedia gratis.
+   ikut mencetak rekor tertinggi, RSI belum overbought, **dan** rata-rata nilai transaksi 20 hari
+   ≥ Rp 10 Miliar (jauh di atas ambang likuiditas dasar). Indikasi volume beli menumpuk lebih dulu
+   sebelum harga bergerak. Ini hanya proxy dari data harga & volume publik (Yahoo Finance) — bukan
+   analisis broker summary/asing net buy seperti bandarmology yang sesungguhnya, karena data itu
+   tidak tersedia gratis.
 
 Guard RSI overbought (`< 70`) di atas sengaja dipasang supaya bot tidak "mengejar" saham yang
 sudah naik terlalu jauh di hari yang sama — mengurangi risiko entry di puncak lonjakan harga.
+
+> Catatan khusus kategori Akumulasi Tersembunyi: OBV gampang terpicu oleh saham tidak likuid —
+> satu transaksi besar di saham tipis bisa membuat OBV mencetak "rekor baru" padahal cuma noise,
+> bukan akumulasi sungguhan. Filter rata-rata nilai transaksi 20 hari (bukan cuma hari ini)
+> dipasang khusus untuk kategori ini agar tidak menampilkan saham dengan bid-offer sepi. Ini tetap
+> proxy kasar — Yahoo Finance tidak menyediakan data kedalaman order book (bid-ask depth) asli,
+> jadi nilai transaksi besar tidak 100% menjamin order book-nya ramai.
 
 **Entry / Take Profit / Stop Loss** (berbasis ATR(14), berlaku untuk semua kategori di atas):
 - Entry = Close terakhir
@@ -219,6 +227,7 @@ git push -u origin main
 | `VOLUME_SPIKE_MIN_GAIN_PCT` | ❌ | `3` | Ambang minimum kenaikan harga (%) untuk kategori Volume Spike |
 | `RSI_OVERSOLD_THRESHOLD` | ❌ | `30` | Ambang RSI oversold untuk deteksi Bullish Reversal |
 | `RSI_OVERBOUGHT_THRESHOLD` | ❌ | `70` | Ambang RSI overbought — di atas ini, Reversal & Volume Spike diabaikan |
+| `HIDDEN_ACCUMULATION_MIN_AVG_VALUE` | ❌ | `10000000000` | Ambang rata-rata nilai transaksi 20 hari khusus kategori Akumulasi Tersembunyi (Rp) |
 
 ## Command Telegram
 
