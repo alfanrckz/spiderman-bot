@@ -78,13 +78,17 @@ export async function analyzeTicker(ticker) {
   // tertinggi baru dalam N hari terakhir, tapi harga belum ikut bikin rekor tertinggi — indikasi
   // volume beli menumpuk duluan sebelum harga benar-benar bergerak.
   // OBV gampang "ketipu" oleh saham tidak likuid: satu transaksi besar di saham thin bisa bikin
-  // OBV rekor baru padahal cuma noise. Karena itu kategori ini butuh rata-rata nilai transaksi
-  // 20 hari yang jauh lebih tinggi dari ambang likuiditas dasar, bukan cuma nilai hari ini.
+  // OBV rekor baru padahal cuma noise. Rata-rata 20 hari saja tidak cukup — rata-rata bisa
+  // terdongkrak beberapa hari ramai padahal hari sinyal ini sendiri (hari yang mau di-entry)
+  // sepi. Karena itu nilai transaksi HARI INI dan rata-rata 20 hari harus sama-sama di atas
+  // ambang likuiditas kategori ini.
   const recentCandles = history.slice(-OBV_DIVERGENCE_LOOKBACK);
   const recentObv = obv.slice(-OBV_DIVERGENCE_LOOKBACK);
   const avgTransactionValue =
     recentCandles.reduce((sum, candle) => sum + candle.close * candle.volume, 0) / recentCandles.length;
-  const isConsistentlyLiquid = avgTransactionValue >= config.hiddenAccumulationMinAvgValue;
+  const isConsistentlyLiquid =
+    transactionValue >= config.hiddenAccumulationMinAvgValue &&
+    avgTransactionValue >= config.hiddenAccumulationMinAvgValue;
   const obvMadeNewHigh = recentObv.at(-1) === Math.max(...recentObv);
   const priceMadeNewHigh = lastClose === Math.max(...recentCandles.map((candle) => candle.close));
   const hiddenAccumulation =
