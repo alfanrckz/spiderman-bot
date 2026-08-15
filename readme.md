@@ -1,20 +1,24 @@
 # Bot Telegram Swing Trading BEI/IDX
 
-Bot Telegram (Node.js/ESM) yang memindai saham likuid di Bursa Efek Indonesia dan mengirim
-notifikasi 4 kategori sinyal (Bullish Pullback, Bullish Reversal, Volume Spike, Top Gainers)
-untuk swing & intraday trading, berdasarkan data EOD resmi dari Yahoo Finance (EMA 20, EMA 50,
-RSI 14, ATR 14). Berjalan otomatis setiap Senin–Jumat pukul 18:30 WIB via `node-cron`, dan bisa
-dipicu manual dengan command `/scan`.
+Bot Telegram (Node.js/ESM) yang memindai (hampir) seluruh saham tercatat di Bursa Efek Indonesia
+dan mengirim notifikasi 4 kategori sinyal (Bullish Pullback, Bullish Reversal, Volume Spike,
+Akumulasi Tersembunyi) untuk swing & intraday trading, berdasarkan data EOD resmi dari Yahoo
+Finance (EMA 20, EMA 50, RSI 14, ATR 14, OBV). Berjalan otomatis setiap Senin–Jumat pukul 18:30
+WIB via `node-cron`, dan bisa dipicu manual dengan command `/scan`.
 
 ## Struktur Proyek
 
 ```
 .
 ├── index.js                       # Entry point: launch bot + start cron + health server
-├── scripts/scan-and-notify.js     # Script one-off untuk GitHub Actions (scan lalu keluar)
+├── scripts/
+│   ├── scan-and-notify.js         # Script one-off untuk GitHub Actions (scan lalu keluar)
+│   └── fetch-idx-universe.js      # Refresh daftar ticker dari dataset publik IDX
 ├── src/
 │   ├── config/env.js              # Load & validasi .env
-│   ├── data/stockUniverse.js      # Universum ticker LQ45/Kompas100 + mid/small cap (.JK)
+│   ├── data/
+│   │   ├── stockUniverse.js       # Baca idxUniverse.json, tambahkan suffix .JK
+│   │   └── idxUniverse.json       # Hasil generate fetch-idx-universe.js (jangan edit manual)
 │   ├── services/
 │   │   ├── marketData.js          # Fetch data EOD dari yahoo-finance2
 │   │   ├── indicatorEngine.js     # Hitung series EMA20/EMA50/RSI14/ATR14
@@ -32,6 +36,27 @@ dipicu manual dengan command `/scan`.
 ├── .gitignore
 └── package.json
 ```
+
+## Universum Saham
+
+`src/data/idxUniverse.json` digenerate oleh `npm run fetch-universe` dari dataset publik
+[wildangunawan/Dataset-Saham-IDX](https://github.com/wildangunawan/Dataset-Saham-IDX) (lisensi
+CC BY-NC 4.0, data bersumber dari PT Bursa Efek Indonesia — **hanya untuk penggunaan
+non-komersial**, wajib cantumkan atribusi ini). Saham di papan **"Pemantauan Khusus"**
+(klasifikasi resmi IDX untuk emiten dengan pola transaksi tidak wajar / risiko tinggi) otomatis
+dikecualikan sebelum masuk universum scan.
+
+Kenapa bukan fetch langsung dari idx.co.id? Situsnya dilindungi Cloudflare bot-protection —
+request otomatis (termasuk dari Node.js) diblokir dengan challenge page, kecuali dengan teknik
+bypass yang secara sengaja tidak diimplementasikan di proyek ini.
+
+Jalankan `npm run fetch-universe` sewaktu-waktu (misal tiap 1-2 bulan) untuk memperbarui daftar
+ticker mengikuti IPO/delisting terbaru — dataset sumbernya di-update manual oleh maintainer-nya,
+jadi tidak selalu 100% real-time, tapi jauh lebih lengkap (700+ ticker) dibanding daftar manual.
+
+Setelah universum di-generate, **filter likuiditas & indikator di `signalDetector.js` tetap jadi
+penyaring utama** — memperluas universum tidak mengubah kriteria sinyal, cuma memperluas
+cakupan saham yang diperiksa.
 
 ## Logika Sinyal
 
