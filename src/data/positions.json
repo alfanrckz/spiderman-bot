@@ -1,0 +1,11 @@
+[
+  {
+    "ticker": "BBCA.JK",
+    "entryDate": "2026-08-15",
+    "entry": 6350,
+    "stopLoss": 6119.571530243734,
+    "takeProfit": 6810.856939512531,
+    "atr14": 153.6189798375106,
+    "category": "bullishReversal"
+  }
+]
