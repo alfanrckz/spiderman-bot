@@ -7,10 +7,11 @@ const MIN_CANDLES_REQUIRED = 100;
 const VOLUME_LOOKBACK = 20;
 const OBV_DIVERGENCE_LOOKBACK = 20;
 
-export async function analyzeTicker(ticker) {
-  const history = await fetchDailyHistory(ticker);
-
-  if (history.length < MIN_CANDLES_REQUIRED) {
+// Menghitung semua indikator & kategori sinyal dari history yang sudah di-fetch, TANPA filter
+// likuiditas — dipakai baik oleh analyzeTicker() (scan, dengan filter likuiditas di bawah) maupun
+// positionTracker.js (/entry, di mana likuiditas tidak relevan karena user sudah benar-benar beli).
+export function computeSignalMatches(ticker, history) {
+  if (history.length < OBV_DIVERGENCE_LOOKBACK + 1) {
     return null;
   }
 
@@ -19,14 +20,6 @@ export async function analyzeTicker(ticker) {
   const lastClose = lastCandle.close;
   const lastVolume = lastCandle.volume;
   const transactionValue = lastClose * lastVolume;
-
-  // Filter likuiditas dijalankan dulu, sebelum menghitung indikator/sinyal apa pun.
-  const passesLiquidity =
-    lastClose > config.minPrice && transactionValue > config.minTransactionValue;
-
-  if (!passesLiquidity) {
-    return null;
-  }
 
   const { ema20, ema50, rsi14, atr14, obv } = computeIndicatorSeries(history);
   const lastEma20 = ema20.at(-1);
@@ -135,4 +128,27 @@ export async function analyzeTicker(ticker) {
       hiddenAccumulation,
     },
   };
+}
+
+export async function analyzeTicker(ticker) {
+  const history = await fetchDailyHistory(ticker);
+
+  if (history.length < MIN_CANDLES_REQUIRED) {
+    return null;
+  }
+
+  const lastCandle = history.at(-1);
+  const lastClose = lastCandle.close;
+  const lastVolume = lastCandle.volume;
+  const transactionValue = lastClose * lastVolume;
+
+  // Filter likuiditas dijalankan dulu, sebelum menghitung indikator/sinyal apa pun.
+  const passesLiquidity =
+    lastClose > config.minPrice && transactionValue > config.minTransactionValue;
+
+  if (!passesLiquidity) {
+    return null;
+  }
+
+  return computeSignalMatches(ticker, history);
 }

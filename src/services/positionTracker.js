@@ -3,6 +3,7 @@ import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { fetchDailyHistory } from './marketData.js';
 import { computeIndicatorSeries } from './indicatorEngine.js';
+import { computeSignalMatches } from './signalDetector.js';
 import { buildTradePlan } from './tradePlan.js';
 import { commitAndPush } from '../utils/gitSync.js';
 
@@ -45,29 +46,15 @@ function normalizeTicker(tickerInput) {
 
 async function analyzeForEntry(ticker) {
   const history = await fetchDailyHistory(ticker);
+  const analysis = computeSignalMatches(ticker, history);
 
-  if (history.length < 50) {
-    throw new Error('Data historis tidak cukup untuk ticker ini (mungkin salah kode atau baru IPO).');
+  if (!analysis) {
+    throw new Error(
+      'Data historis tidak cukup untuk menghitung indikator ticker ini (mungkin salah kode, baru IPO, atau terlalu jarang transaksi).'
+    );
   }
 
-  const lastCandle = history.at(-1);
-  const { ema20, ema50, rsi14, atr14 } = computeIndicatorSeries(history);
-  const lastEma20 = ema20.at(-1);
-  const lastEma50 = ema50.at(-1);
-  const lastRsi = rsi14.at(-1);
-  const lastAtr = atr14.at(-1);
-
-  if (lastAtr == null) {
-    throw new Error('ATR tidak bisa dihitung untuk ticker ini.');
-  }
-
-  return {
-    lastClose: lastCandle.close,
-    ema20: lastEma20,
-    ema50: lastEma50,
-    rsi14: lastRsi,
-    atr14: lastAtr,
-  };
+  return analysis;
 }
 
 export async function addPosition(tickerInput, customEntryPrice) {
@@ -78,17 +65,15 @@ export async function addPosition(tickerInput, customEntryPrice) {
     throw new Error(`Sudah ada posisi aktif untuk #${ticker.replace('.JK', '')}. Gunakan /close dulu kalau mau reset.`);
   }
 
-  const snapshot = await analyzeForEntry(ticker);
-  const entry = customEntryPrice ?? snapshot.lastClose;
-  const tradePlan = buildTradePlan(entry, snapshot.atr14);
+  const analysis = await analyzeForEntry(ticker);
+  const primaryCategory = CATEGORY_PRIORITY.find((category) => analysis.matches[category]) ?? null;
 
-  const isUptrend = snapshot.lastClose > snapshot.ema20 && snapshot.ema20 > snapshot.ema50;
-  const isPullbackZone = snapshot.rsi14 >= 35 && snapshot.rsi14 <= 48;
-  const matchedCategories = [];
-  if (isUptrend && isPullbackZone) matchedCategories.push('bullishPullback');
-  if (snapshot.ema20 > snapshot.ema50) matchedCategories.push('bullishReversal');
-
-  const primaryCategory = CATEGORY_PRIORITY.find((cat) => matchedCategories.includes(cat)) ?? null;
+  // Kalau user /entry TANPA harga custom dan sinyalnya Volume Spike, pakai basis entry area
+  // EMA20 (retracement) — konsisten dengan rekomendasi di pesan sinyal, bukan harga penutupan
+  // hari spike yang justru paling mahal/euforia.
+  const useVolumeSpikeBasis = customEntryPrice == null && analysis.matches.volumeSpike;
+  const entry = customEntryPrice ?? (useVolumeSpikeBasis ? analysis.volumeSpikeEntry : analysis.lastClose);
+  const tradePlan = buildTradePlan(entry, analysis.atr14);
 
   const position = {
     ticker,
@@ -96,7 +81,7 @@ export async function addPosition(tickerInput, customEntryPrice) {
     entry,
     stopLoss: tradePlan.stopLoss,
     takeProfit: tradePlan.takeProfit,
-    atr14: snapshot.atr14,
+    atr14: analysis.atr14,
     category: primaryCategory,
   };
 
