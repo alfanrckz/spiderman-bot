@@ -69,10 +69,19 @@ export async function analyzeTicker(ticker) {
 
   // Volume Spike: volume jauh di atas rata-rata dibarengi kenaikan harga signifikan, tapi
   // dilewatkan jika RSI sudah overbought (menghindari entry di puncak lonjakan).
+  // Entry-nya SENGAJA tidak pakai Close hari spike — itu harga paling euforia/mahal hari itu,
+  // beli di situ artinya chasing dan sering langsung koreksi besoknya. Entry disarankan di area
+  // retracement EMA20, SL/TP dihitung ulang dari level itu, bukan dari Close.
+  const volumeSpikeEntryPrice = lastEma20;
+  const hasValidPullbackZone = volumeSpikeEntryPrice != null && volumeSpikeEntryPrice < lastClose;
   const volumeSpike =
     volumeRatio >= config.volumeSpikeRatio &&
     pctChangeToday >= config.volumeSpikeMinGainPct &&
-    isNotOverbought;
+    isNotOverbought &&
+    hasValidPullbackZone;
+  const volumeSpikeTradePlan = hasValidPullbackZone
+    ? buildTradePlan(volumeSpikeEntryPrice, lastAtr)
+    : null;
 
   // Akumulasi Tersembunyi (proxy volume, bukan bandarmology broker asli): OBV bikin rekor
   // tertinggi baru dalam N hari terakhir, tapi harga belum ikut bikin rekor tertinggi — indikasi
@@ -115,6 +124,9 @@ export async function analyzeTicker(ticker) {
     ema50: lastEma50,
     atr14: lastAtr,
     ...tradePlan,
+    volumeSpikeEntry: volumeSpikeTradePlan?.entry,
+    volumeSpikeStopLoss: volumeSpikeTradePlan?.stopLoss,
+    volumeSpikeTakeProfit: volumeSpikeTradePlan?.takeProfit,
     reversalReason,
     matches: {
       bullishPullback,

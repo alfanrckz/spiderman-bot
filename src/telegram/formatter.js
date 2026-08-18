@@ -27,15 +27,15 @@ function formatBaseLines(signal) {
   ];
 }
 
-function formatTradeLines(signal) {
-  const gainPct = ((signal.takeProfit - signal.entry) / signal.entry) * 100;
-  const lossPct = ((signal.entry - signal.stopLoss) / signal.entry) * 100;
+function formatTradeLines(entry, stopLoss, takeProfit, atr14, entryLabel = 'Entry') {
+  const gainPct = ((takeProfit - entry) / entry) * 100;
+  const lossPct = ((entry - stopLoss) / entry) * 100;
 
   return [
-    `🎯 *Entry:* Rp ${integerFormatter.format(signal.entry)}`,
-    `✅ *Take Profit:* Rp ${integerFormatter.format(signal.takeProfit)} (+${decimalFormatter.format(gainPct)}%)`,
-    `🛑 *Stop Loss:* Rp ${integerFormatter.format(signal.stopLoss)} (-${decimalFormatter.format(lossPct)}%)`,
-    `⚖️ Risk:Reward ≈ 1:2 (ATR14 = ${integerFormatter.format(signal.atr14)})`,
+    `🎯 *${entryLabel}:* Rp ${integerFormatter.format(entry)}`,
+    `✅ *Take Profit:* Rp ${integerFormatter.format(takeProfit)} (+${decimalFormatter.format(gainPct)}%)`,
+    `🛑 *Stop Loss:* Rp ${integerFormatter.format(stopLoss)} (-${decimalFormatter.format(lossPct)}%)`,
+    `⚖️ Risk:Reward ≈ 1:2 (ATR14 = ${integerFormatter.format(atr14)})`,
   ];
 }
 
@@ -45,7 +45,7 @@ function formatBullishPullbackBlock(signal) {
     ``,
     ...formatBaseLines(signal),
     ``,
-    ...formatTradeLines(signal),
+    ...formatTradeLines(signal.entry, signal.stopLoss, signal.takeProfit, signal.atr14),
     ``,
     `📝 Tren naik sehat (Close > EMA20 > EMA50), RSI di zona pullback (35-48). Cocok untuk entry swing.`,
   ].join('\n');
@@ -57,7 +57,7 @@ function formatBullishReversalBlock(signal) {
     ``,
     ...formatBaseLines(signal),
     ``,
-    ...formatTradeLines(signal),
+    ...formatTradeLines(signal.entry, signal.stopLoss, signal.takeProfit, signal.atr14),
     ``,
     `📝 ${signal.reversalReason}. Potensi awal tren naik baru — cocok untuk swing/intraday.`,
   ].join('\n');
@@ -70,9 +70,18 @@ function formatVolumeSpikeBlock(signal) {
     ...formatBaseLines(signal),
     `🔊 Volume: ${decimalFormatter.format(signal.volumeRatio)}x rata-rata 20 hari`,
     ``,
-    ...formatTradeLines(signal),
+    `⏳ *Jangan beli di harga penutupan hari ini* — itu harga paling euforia/mahal hari spike.`,
+    `Tunggu retracement wajar ke area EMA20 dulu, baru entry dari situ:`,
     ``,
-    `📝 Lonjakan volume dibarengi harga naik ${decimalFormatter.format(signal.pctChangeToday)}% — indikasi minat beli besar, pantau untuk intraday/swing cepat.`,
+    ...formatTradeLines(
+      signal.volumeSpikeEntry,
+      signal.volumeSpikeStopLoss,
+      signal.volumeSpikeTakeProfit,
+      signal.atr14,
+      'Entry (area EMA20)'
+    ),
+    ``,
+    `📝 Lonjakan volume + harga naik ${decimalFormatter.format(signal.pctChangeToday)}% hari ini menandakan minat beli besar, tapi entry di puncak euforia sering langsung dikoreksi besoknya. Kalau harga tidak pernah retest ke area ini, lewati saja — jangan chasing.`,
   ].join('\n');
 }
 
@@ -82,7 +91,7 @@ function formatHiddenAccumulationBlock(signal) {
     ``,
     ...formatBaseLines(signal),
     ``,
-    ...formatTradeLines(signal),
+    ...formatTradeLines(signal.entry, signal.stopLoss, signal.takeProfit, signal.atr14),
     ``,
     `📝 OBV bikin rekor tertinggi 20 hari, tapi harga belum ikut — indikasi volume beli menumpuk duluan (proxy volume, bukan data broker asli). Potensi breakout menyusul.`,
   ].join('\n');

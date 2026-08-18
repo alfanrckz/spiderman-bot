@@ -81,7 +81,11 @@ lebih dari satu kategori sekaligus):
    - **RSI Oversold Recovery**: `RSI(14)` kemarin < 30, hari ini rebound ke ≥ 30, dan harga naik
      dari penutupan kemarin.
 3. **🚀 Volume Spike** (intraday) — volume hari ini ≥ 2× rata-rata volume 20 hari, harga naik
-   ≥ 3% dari penutupan kemarin, dan RSI belum overbought (`< 70`).
+   ≥ 3% dari penutupan kemarin, dan RSI belum overbought (`< 70`). **Entry yang disarankan bukan
+   harga penutupan hari spike** (itu harga paling euforia/mahal hari itu, entry di situ = chasing
+   dan sering langsung dikoreksi besoknya) — melainkan area retracement ke **EMA20**, dengan
+   SL/TP dihitung ulang dari level itu. Kalau harga tidak pernah retest ke area tersebut,
+   sinyalnya dilewati saja, bukan dipaksakan entry di harga tinggi.
 4. **🐋 Akumulasi Tersembunyi** (proxy volume, *bukan* bandarmology broker asli) — OBV
    (On-Balance Volume) mencetak rekor tertinggi baru dalam 20 hari terakhir, tapi harga **belum**
    ikut mencetak rekor tertinggi, RSI belum overbought, **dan** nilai transaksi **hari ini** *serta*
