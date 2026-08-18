@@ -1,1 +1,11 @@
-[]
+[
+  {
+    "ticker": "AHAP.JK",
+    "entryDate": "2026-08-18",
+    "entry": 94.77747221669892,
+    "stopLoss": 86.52750887451977,
+    "takeProfit": 111.27739890105725,
+    "atr14": 5.499975561452775,
+    "category": "volumeSpike"
+  }
+]
