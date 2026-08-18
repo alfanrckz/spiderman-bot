@@ -23,4 +23,5 @@ export const config = {
   rsiOversoldThreshold: Number(process.env.RSI_OVERSOLD_THRESHOLD || 30),
   rsiOverboughtThreshold: Number(process.env.RSI_OVERBOUGHT_THRESHOLD || 70),
   hiddenAccumulationMinAvgValue: Number(process.env.HIDDEN_ACCUMULATION_MIN_AVG_VALUE || 10_000_000_000),
+  volumeSpikeMinCloseStrength: Number(process.env.VOLUME_SPIKE_MIN_CLOSE_STRENGTH || 0.5),
 };

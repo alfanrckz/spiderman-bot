@@ -6,11 +6,15 @@ import { buildTradePlan } from './tradePlan.js';
 const MIN_CANDLES_REQUIRED = 100;
 const VOLUME_LOOKBACK = 20;
 const OBV_DIVERGENCE_LOOKBACK = 20;
+const EMA50_SLOPE_LOOKBACK = 10;
 
 // Menghitung semua indikator & kategori sinyal dari history yang sudah di-fetch, TANPA filter
 // likuiditas — dipakai baik oleh analyzeTicker() (scan, dengan filter likuiditas di bawah) maupun
 // positionTracker.js (/entry, di mana likuiditas tidak relevan karena user sudah benar-benar beli).
-export function computeSignalMatches(ticker, history) {
+// marketCondition (dari getMarketCondition(), dicek sekali per scan) jadi gate tambahan di semua
+// kategori — "jangan melawan arus": sinyal beli per-saham jauh lebih sering gagal kalau IHSG
+// sendiri lagi downtrend.
+export function computeSignalMatches(ticker, history, marketCondition = { isBullish: true }) {
   if (history.length < OBV_DIVERGENCE_LOOKBACK + 1) {
     return null;
   }
@@ -37,16 +41,22 @@ export function computeSignalMatches(ticker, history) {
     return null;
   }
 
+  const isMarketBullish = marketCondition?.isBullish !== false;
+
   const pctChangeToday = ((lastClose - prevCandle.close) / prevCandle.close) * 100;
 
   const recentVolumes = history.slice(-1 - VOLUME_LOOKBACK, -1).map((candle) => candle.volume);
   const avgVolume = recentVolumes.reduce((sum, volume) => sum + volume, 0) / recentVolumes.length;
   const volumeRatio = avgVolume > 0 ? lastVolume / avgVolume : 0;
 
-  // Bullish Pullback: tren naik sehat, RSI baru koreksi ke zona 35-48.
-  const isUptrend = lastClose > lastEma20 && lastEma20 > lastEma50;
+  // Bullish Pullback: tren naik sehat, RSI baru koreksi ke zona 35-48. EMA50 juga harus masih naik
+  // dibanding ~2 minggu lalu — EMA20>EMA50 saja bisa terjadi walau EMA50-nya sendiri sudah
+  // mendatar/melandai (tren melemah), bukan tren naik yang benar-benar sehat.
+  const ema50TenDaysAgo = ema50.length > EMA50_SLOPE_LOOKBACK ? ema50.at(-1 - EMA50_SLOPE_LOOKBACK) : null;
+  const isEma50Rising = ema50TenDaysAgo != null && lastEma50 > ema50TenDaysAgo;
+  const isUptrend = lastClose > lastEma20 && lastEma20 > lastEma50 && isEma50Rising;
   const isPullbackZone = lastRsi >= 35 && lastRsi <= 48;
-  const bullishPullback = isUptrend && isPullbackZone;
+  const bullishPullback = isUptrend && isPullbackZone && isMarketBullish;
 
   // Bullish Reversal: golden cross EMA20/EMA50 baru terjadi (selama belum overbought), atau RSI
   // baru rebound dari oversold. Guard RSI overbought mencegah "mengejar" saham yang sudah naik
@@ -58,20 +68,27 @@ export function computeSignalMatches(ticker, history) {
     prevRsi < config.rsiOversoldThreshold &&
     lastRsi >= config.rsiOversoldThreshold &&
     lastClose > prevCandle.close;
-  const bullishReversal = goldenCross || rsiOversoldRecovery;
+  const bullishReversal = (goldenCross || rsiOversoldRecovery) && isMarketBullish;
 
   // Volume Spike: volume jauh di atas rata-rata dibarengi kenaikan harga signifikan, tapi
-  // dilewatkan jika RSI sudah overbought (menghindari entry di puncak lonjakan).
+  // dilewatkan jika RSI sudah overbought (menghindari entry di puncak lonjakan). Candle-nya juga
+  // wajib "closed strong" — ditutup di bagian atas range hari itu — supaya bukan spike yang
+  // langsung dijual turun (spike-and-fade), tanda buyer masih pegang kendali sampai closing.
   // Entry-nya SENGAJA tidak pakai Close hari spike — itu harga paling euforia/mahal hari itu,
   // beli di situ artinya chasing dan sering langsung koreksi besoknya. Entry disarankan di area
   // retracement EMA20, SL/TP dihitung ulang dari level itu, bukan dari Close.
+  const dayRange = lastCandle.high - lastCandle.low;
+  const closeStrength = dayRange > 0 ? (lastClose - lastCandle.low) / dayRange : 1;
+  const closedStrong = closeStrength >= config.volumeSpikeMinCloseStrength;
   const volumeSpikeEntryPrice = lastEma20;
   const hasValidPullbackZone = volumeSpikeEntryPrice != null && volumeSpikeEntryPrice < lastClose;
   const volumeSpike =
     volumeRatio >= config.volumeSpikeRatio &&
     pctChangeToday >= config.volumeSpikeMinGainPct &&
     isNotOverbought &&
-    hasValidPullbackZone;
+    hasValidPullbackZone &&
+    closedStrong &&
+    isMarketBullish;
   const volumeSpikeTradePlan = hasValidPullbackZone
     ? buildTradePlan(volumeSpikeEntryPrice, lastAtr)
     : null;
@@ -94,7 +111,7 @@ export function computeSignalMatches(ticker, history) {
   const obvMadeNewHigh = recentObv.at(-1) === Math.max(...recentObv);
   const priceMadeNewHigh = lastClose === Math.max(...recentCandles.map((candle) => candle.close));
   const hiddenAccumulation =
-    obvMadeNewHigh && !priceMadeNewHigh && isNotOverbought && isConsistentlyLiquid;
+    obvMadeNewHigh && !priceMadeNewHigh && isNotOverbought && isConsistentlyLiquid && isMarketBullish;
 
   const tradePlan = buildTradePlan(lastClose, lastAtr);
 
@@ -130,7 +147,7 @@ export function computeSignalMatches(ticker, history) {
   };
 }
 
-export async function analyzeTicker(ticker) {
+export async function analyzeTicker(ticker, marketCondition) {
   const history = await fetchDailyHistory(ticker);
 
   if (history.length < MIN_CANDLES_REQUIRED) {
@@ -150,5 +167,5 @@ export async function analyzeTicker(ticker) {
     return null;
   }
 
-  return computeSignalMatches(ticker, history);
+  return computeSignalMatches(ticker, history, marketCondition);
 }

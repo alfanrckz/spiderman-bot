@@ -4,6 +4,7 @@ import path from 'node:path';
 import { fetchDailyHistory } from './marketData.js';
 import { computeIndicatorSeries } from './indicatorEngine.js';
 import { computeSignalMatches } from './signalDetector.js';
+import { getMarketCondition } from './marketCondition.js';
 import { buildTradePlan } from './tradePlan.js';
 import { commitAndPush } from '../utils/gitSync.js';
 
@@ -45,8 +46,8 @@ function normalizeTicker(tickerInput) {
 }
 
 async function analyzeForEntry(ticker) {
-  const history = await fetchDailyHistory(ticker);
-  const analysis = computeSignalMatches(ticker, history);
+  const [history, marketCondition] = await Promise.all([fetchDailyHistory(ticker), getMarketCondition()]);
+  const analysis = computeSignalMatches(ticker, history, marketCondition);
 
   if (!analysis) {
     throw new Error(

@@ -24,6 +24,7 @@ Anda sendiri lewat `/entry`, `/posisi`, `/close`.
 │   ├── services/
 │   │   ├── marketData.js          # Fetch data EOD dari yahoo-finance2
 │   │   ├── indicatorEngine.js     # Hitung series EMA20/EMA50/RSI14/ATR14/OBV
+│   │   ├── marketCondition.js     # Cek tren IHSG sekali per scan (gate "jangan lawan pasar")
 │   │   ├── tradePlan.js           # Hitung Entry/Take Profit/Stop Loss berbasis ATR
 │   │   ├── signalDetector.js      # Filter likuiditas + deteksi semua kategori sinyal
 │   │   ├── scanner.js             # Orkestrasi scan seluruh universum
@@ -65,27 +66,38 @@ cakupan saham yang diperiksa.
 
 ## Logika Sinyal
 
-**Filter likuiditas** dijalankan lebih dulu untuk semua kategori (butuh minimal 100 candle
+**Filter kondisi pasar** dicek sekali per scan, sebelum ticker mana pun dianalisis — "jangan
+melawan arus pasar": IHSG (`^JKSE`) harus `Close > EMA20 > EMA50` (bullish) supaya sinyal beli
+apa pun boleh muncul. Kalau IHSG sendiri sedang downtrend/netral, semua kategori sinyal
+otomatis kosong hari itu — bukan bug, itu memang tujuannya (skip total daripada kasih sinyal
+saat probabilitas keberhasilannya rendah karena melawan tren market secara keseluruhan).
+
+**Filter likuiditas** dijalankan berikutnya untuk semua kategori (butuh minimal 100 candle
 harian per ticker):
 - Close terakhir > Rp 100
 - Nilai transaksi harian (Close × Volume) > Rp 3.000.000.000
 
-Setelah lolos likuiditas, tiap ticker dicek terhadap 4 kategori sinyal (satu ticker bisa masuk
-lebih dari satu kategori sekaligus):
+Setelah lolos likuiditas & kondisi pasar bullish, tiap ticker dicek terhadap 4 kategori sinyal
+(satu ticker bisa masuk lebih dari satu kategori sekaligus):
 
 1. **🟢 Bullish Pullback** (swing) — `Close > EMA20 > EMA50` (uptrend) dan `RSI(14)` di rentang
-   `35–48` (koreksi sehat dalam tren naik).
+   `35–48` (koreksi sehat dalam tren naik). EMA50 juga wajib masih naik dibanding ~10 hari
+   (2 minggu) lalu — mencegah kasus `EMA20 > EMA50` yang terjadi padahal EMA50-nya sendiri sudah
+   mendatar/melandai (tren melemah, bukan tren naik yang benar-benar sehat).
 2. **🔄 Bullish Reversal** (swing/intraday) — salah satu dari:
    - **Golden Cross**: `EMA20` baru memotong ke atas `EMA50` hari ini (kemarin masih di bawah),
      dan RSI belum overbought (`< 70`).
    - **RSI Oversold Recovery**: `RSI(14)` kemarin < 30, hari ini rebound ke ≥ 30, dan harga naik
      dari penutupan kemarin.
 3. **🚀 Volume Spike** (intraday) — volume hari ini ≥ 2× rata-rata volume 20 hari, harga naik
-   ≥ 3% dari penutupan kemarin, dan RSI belum overbought (`< 70`). **Entry yang disarankan bukan
-   harga penutupan hari spike** (itu harga paling euforia/mahal hari itu, entry di situ = chasing
-   dan sering langsung dikoreksi besoknya) — melainkan area retracement ke **EMA20**, dengan
-   SL/TP dihitung ulang dari level itu. Kalau harga tidak pernah retest ke area tersebut,
-   sinyalnya dilewati saja, bukan dipaksakan entry di harga tinggi.
+   ≥ 3% dari penutupan kemarin, RSI belum overbought (`< 70`), **dan candle-nya "closed strong"**
+   — Close berada di ≥50% bagian atas range hari itu (`(Close-Low)/(High-Low) ≥ 0.5`). Tanpa ini,
+   saham yang sempat naik tinggi lalu dijual turun sampai closing (spike-and-fade, tanda lemah)
+   ikut lolos padahal buyer sudah kehilangan kendali di akhir sesi.
+   **Entry yang disarankan bukan harga penutupan hari spike** (itu harga paling euforia/mahal
+   hari itu, entry di situ = chasing dan sering langsung dikoreksi besoknya) — melainkan area
+   retracement ke **EMA20**, dengan SL/TP dihitung ulang dari level itu. Kalau harga tidak pernah
+   retest ke area tersebut, sinyalnya dilewati saja, bukan dipaksakan entry di harga tinggi.
 4. **🐋 Akumulasi Tersembunyi** (proxy volume, *bukan* bandarmology broker asli) — OBV
    (On-Balance Volume) mencetak rekor tertinggi baru dalam 20 hari terakhir, tapi harga **belum**
    ikut mencetak rekor tertinggi, RSI belum overbought, **dan** nilai transaksi **hari ini** *serta*
@@ -293,6 +305,7 @@ git push -u origin main
 | `RSI_OVERSOLD_THRESHOLD` | ❌ | `30` | Ambang RSI oversold untuk deteksi Bullish Reversal |
 | `RSI_OVERBOUGHT_THRESHOLD` | ❌ | `70` | Ambang RSI overbought — di atas ini, Reversal & Volume Spike diabaikan |
 | `HIDDEN_ACCUMULATION_MIN_AVG_VALUE` | ❌ | `10000000000` | Ambang rata-rata nilai transaksi 20 hari khusus kategori Akumulasi Tersembunyi (Rp) |
+| `VOLUME_SPIKE_MIN_CLOSE_STRENGTH` | ❌ | `0.5` | Minimum posisi Close dalam range High-Low hari itu (0-1) untuk kategori Volume Spike |
 
 ## Command Telegram
 
