@@ -1,1 +1,366 @@
-[]
+[
+  {
+    "id": "UDNG.JK-bullishReversal-2026-08-31",
+    "ticker": "UDNG.JK",
+    "category": "bullishReversal",
+    "date": "2026-08-31",
+    "entryRef": 1430,
+    "confidence": 6,
+    "confidenceMax": 6,
+    "outcomes": {
+      "d1": null,
+      "d3": null,
+      "d5": null
+    }
+  },
+  {
+    "id": "CBDK.JK-bullishReversal-2026-08-31",
+    "ticker": "CBDK.JK",
+    "category": "bullishReversal",
+    "date": "2026-08-31",
+    "entryRef": 3780,
+    "confidence": 5,
+    "confidenceMax": 6,
+    "outcomes": {
+      "d1": null,
+      "d3": null,
+      "d5": null
+    }
+  },
+  {
+    "id": "DSSA.JK-bullishReversal-2026-08-31",
+    "ticker": "DSSA.JK",
+    "category": "bullishReversal",
+    "date": "2026-08-31",
+    "entryRef": 1110,
+    "confidence": 5,
+    "confidenceMax": 6,
+    "outcomes": {
+      "d1": null,
+      "d3": null,
+      "d5": null
+    }
+  },
+  {
+    "id": "LEAD.JK-bullishReversal-2026-08-31",
+    "ticker": "LEAD.JK",
+    "category": "bullishReversal",
+    "date": "2026-08-31",
+    "entryRef": 118,
+    "confidence": 5,
+    "confidenceMax": 6,
+    "outcomes": {
+      "d1": null,
+      "d3": null,
+      "d5": null
+    }
+  },
+  {
+    "id": "PYFA.JK-bullishReversal-2026-08-31",
+    "ticker": "PYFA.JK",
+    "category": "bullishReversal",
+    "date": "2026-08-31",
+    "entryRef": 256,
+    "confidence": 5,
+    "confidenceMax": 6,
+    "outcomes": {
+      "d1": null,
+      "d3": null,
+      "d5": null
+    }
+  },
+  {
+    "id": "GRPM.JK-bullishReversal-2026-08-31",
+    "ticker": "GRPM.JK",
+    "category": "bullishReversal",
+    "date": "2026-08-31",
+    "entryRef": 198,
+    "confidence": 3,
+    "confidenceMax": 6,
+    "outcomes": {
+      "d1": null,
+      "d3": null,
+      "d5": null
+    }
+  },
+  {
+    "id": "BINA.JK-volumeSpike-2026-08-31",
+    "ticker": "BINA.JK",
+    "category": "volumeSpike",
+    "date": "2026-08-31",
+    "entryRef": 4142.784723239134,
+    "confidence": 5,
+    "confidenceMax": 6,
+    "outcomes": {
+      "d1": null,
+      "d3": null,
+      "d5": null
+    }
+  },
+  {
+    "id": "LEAD.JK-volumeSpike-2026-08-31",
+    "ticker": "LEAD.JK",
+    "category": "volumeSpike",
+    "date": "2026-08-31",
+    "entryRef": 107.11203723295155,
+    "confidence": 5,
+    "confidenceMax": 6,
+    "outcomes": {
+      "d1": null,
+      "d3": null,
+      "d5": null
+    }
+  },
+  {
+    "id": "OASA.JK-volumeSpike-2026-08-31",
+    "ticker": "OASA.JK",
+    "category": "volumeSpike",
+    "date": "2026-08-31",
+    "entryRef": 322.85393354759344,
+    "confidence": 5,
+    "confidenceMax": 6,
+    "outcomes": {
+      "d1": null,
+      "d3": null,
+      "d5": null
+    }
+  },
+  {
+    "id": "SSIA.JK-volumeSpike-2026-08-31",
+    "ticker": "SSIA.JK",
+    "category": "volumeSpike",
+    "date": "2026-08-31",
+    "entryRef": 1760.4695101409184,
+    "confidence": 5,
+    "confidenceMax": 6,
+    "outcomes": {
+      "d1": null,
+      "d3": null,
+      "d5": null
+    }
+  },
+  {
+    "id": "AKRA.JK-volumeSpike-2026-08-31",
+    "ticker": "AKRA.JK",
+    "category": "volumeSpike",
+    "date": "2026-08-31",
+    "entryRef": 1399.750634204615,
+    "confidence": 4,
+    "confidenceMax": 6,
+    "outcomes": {
+      "d1": null,
+      "d3": null,
+      "d5": null
+    }
+  },
+  {
+    "id": "ESSA.JK-volumeSpike-2026-08-31",
+    "ticker": "ESSA.JK",
+    "category": "volumeSpike",
+    "date": "2026-08-31",
+    "entryRef": 631.8004869407348,
+    "confidence": 4,
+    "confidenceMax": 6,
+    "outcomes": {
+      "d1": null,
+      "d3": null,
+      "d5": null
+    }
+  },
+  {
+    "id": "JSMR.JK-volumeSpike-2026-08-31",
+    "ticker": "JSMR.JK",
+    "category": "volumeSpike",
+    "date": "2026-08-31",
+    "entryRef": 2786.024451461689,
+    "confidence": 4,
+    "confidenceMax": 6,
+    "outcomes": {
+      "d1": null,
+      "d3": null,
+      "d5": null
+    }
+  },
+  {
+    "id": "LUCY.JK-volumeSpike-2026-08-31",
+    "ticker": "LUCY.JK",
+    "category": "volumeSpike",
+    "date": "2026-08-31",
+    "entryRef": 330.30284054302626,
+    "confidence": 4,
+    "confidenceMax": 6,
+    "outcomes": {
+      "d1": null,
+      "d3": null,
+      "d5": null
+    }
+  },
+  {
+    "id": "ICBP.JK-hiddenAccumulation-2026-08-31",
+    "ticker": "ICBP.JK",
+    "category": "hiddenAccumulation",
+    "date": "2026-08-31",
+    "entryRef": 7600,
+    "confidence": 6,
+    "confidenceMax": 6,
+    "outcomes": {
+      "d1": null,
+      "d3": null,
+      "d5": null
+    }
+  },
+  {
+    "id": "MMIX.JK-hiddenAccumulation-2026-08-31",
+    "ticker": "MMIX.JK",
+    "category": "hiddenAccumulation",
+    "date": "2026-08-31",
+    "entryRef": 780,
+    "confidence": 6,
+    "confidenceMax": 6,
+    "outcomes": {
+      "d1": null,
+      "d3": null,
+      "d5": null
+    }
+  },
+  {
+    "id": "ANTM.JK-hiddenAccumulation-2026-08-31",
+    "ticker": "ANTM.JK",
+    "category": "hiddenAccumulation",
+    "date": "2026-08-31",
+    "entryRef": 3100,
+    "confidence": 5,
+    "confidenceMax": 6,
+    "outcomes": {
+      "d1": null,
+      "d3": null,
+      "d5": null
+    }
+  },
+  {
+    "id": "DSSA.JK-hiddenAccumulation-2026-08-31",
+    "ticker": "DSSA.JK",
+    "category": "hiddenAccumulation",
+    "date": "2026-08-31",
+    "entryRef": 1110,
+    "confidence": 5,
+    "confidenceMax": 6,
+    "outcomes": {
+      "d1": null,
+      "d3": null,
+      "d5": null
+    }
+  },
+  {
+    "id": "GJTL.JK-hiddenAccumulation-2026-08-31",
+    "ticker": "GJTL.JK",
+    "category": "hiddenAccumulation",
+    "date": "2026-08-31",
+    "entryRef": 1395,
+    "confidence": 5,
+    "confidenceMax": 6,
+    "outcomes": {
+      "d1": null,
+      "d3": null,
+      "d5": null
+    }
+  },
+  {
+    "id": "MAPA.JK-hiddenAccumulation-2026-08-31",
+    "ticker": "MAPA.JK",
+    "category": "hiddenAccumulation",
+    "date": "2026-08-31",
+    "entryRef": 720,
+    "confidence": 5,
+    "confidenceMax": 6,
+    "outcomes": {
+      "d1": null,
+      "d3": null,
+      "d5": null
+    }
+  },
+  {
+    "id": "MDKA.JK-hiddenAccumulation-2026-08-31",
+    "ticker": "MDKA.JK",
+    "category": "hiddenAccumulation",
+    "date": "2026-08-31",
+    "entryRef": 2940,
+    "confidence": 5,
+    "confidenceMax": 6,
+    "outcomes": {
+      "d1": null,
+      "d3": null,
+      "d5": null
+    }
+  },
+  {
+    "id": "TINS.JK-hiddenAccumulation-2026-08-31",
+    "ticker": "TINS.JK",
+    "category": "hiddenAccumulation",
+    "date": "2026-08-31",
+    "entryRef": 4040,
+    "confidence": 5,
+    "confidenceMax": 6,
+    "outcomes": {
+      "d1": null,
+      "d3": null,
+      "d5": null
+    }
+  },
+  {
+    "id": "TMPO.JK-hiddenAccumulation-2026-08-31",
+    "ticker": "TMPO.JK",
+    "category": "hiddenAccumulation",
+    "date": "2026-08-31",
+    "entryRef": 184,
+    "confidence": 4,
+    "confidenceMax": 6,
+    "outcomes": {
+      "d1": null,
+      "d3": null,
+      "d5": null
+    }
+  },
+  {
+    "id": "TOWR.JK-hiddenAccumulation-2026-08-31",
+    "ticker": "TOWR.JK",
+    "category": "hiddenAccumulation",
+    "date": "2026-08-31",
+    "entryRef": 454,
+    "confidence": 4,
+    "confidenceMax": 6,
+    "outcomes": {
+      "d1": null,
+      "d3": null,
+      "d5": null
+    }
+  },
+  {
+    "id": "GPSO.JK-hiddenAccumulation-2026-08-31",
+    "ticker": "GPSO.JK",
+    "category": "hiddenAccumulation",
+    "date": "2026-08-31",
+    "entryRef": 304,
+    "confidence": 3,
+    "confidenceMax": 6,
+    "outcomes": {
+      "d1": null,
+      "d3": null,
+      "d5": null
+    }
+  },
+  {
+    "id": "RGAS.JK-hiddenAccumulation-2026-08-31",
+    "ticker": "RGAS.JK",
+    "category": "hiddenAccumulation",
+    "date": "2026-08-31",
+    "entryRef": 165,
+    "confidence": 3,
+    "confidenceMax": 6,
+    "outcomes": {
+      "d1": null,
+      "d3": null,
+      "d5": null
+    }
+  }
+]
