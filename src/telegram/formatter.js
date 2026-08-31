@@ -27,6 +27,24 @@ function formatBaseLines(signal) {
   ];
 }
 
+const CONFIRMATION_LABELS = {
+  trendAligned: 'Tren',
+  emaSlopeRising: 'Slope',
+  volumeSustained: 'Volume',
+  obvRising: 'OBV',
+  rsiHealthyZone: 'RSI',
+  volatilityContained: 'Volatilitas',
+};
+
+// Confidence = konfluensi teknikal (berapa dari 6 dimensi independen yang sejalan), BUKAN
+// probabilitas tervalidasi — sengaja tidak dilabeli "win probability" atau skor /100.
+function formatConfidenceLine(signal) {
+  const detail = Object.entries(signal.confirmations)
+    .map(([key, value]) => `${CONFIRMATION_LABELS[key]}${value ? '✓' : '✗'}`)
+    .join(' ');
+  return `⭐ Confidence: ${signal.confidence}/${signal.confidenceMax} (${detail})`;
+}
+
 function formatTradeLines(entry, stopLoss, takeProfit, atr14, entryLabel = 'Entry') {
   const gainPct = ((takeProfit - entry) / entry) * 100;
   const lossPct = ((entry - stopLoss) / entry) * 100;
@@ -44,6 +62,7 @@ function formatBullishPullbackBlock(signal) {
     `🟢 *BULLISH PULLBACK*`,
     ``,
     ...formatBaseLines(signal),
+    formatConfidenceLine(signal),
     ``,
     ...formatTradeLines(signal.entry, signal.stopLoss, signal.takeProfit, signal.atr14),
     ``,
@@ -56,6 +75,7 @@ function formatBullishReversalBlock(signal) {
     `🔄 *BULLISH REVERSAL*`,
     ``,
     ...formatBaseLines(signal),
+    formatConfidenceLine(signal),
     ``,
     ...formatTradeLines(signal.entry, signal.stopLoss, signal.takeProfit, signal.atr14),
     ``,
@@ -69,6 +89,7 @@ function formatVolumeSpikeBlock(signal) {
     ``,
     ...formatBaseLines(signal),
     `🔊 Volume: ${decimalFormatter.format(signal.volumeRatio)}x rata-rata 20 hari`,
+    formatConfidenceLine(signal),
     ``,
     `⏳ *Jangan beli di harga penutupan hari ini* — itu harga paling euforia/mahal hari spike.`,
     `Tunggu retracement wajar ke area EMA20 dulu, baru entry dari situ:`,
@@ -90,6 +111,7 @@ function formatHiddenAccumulationBlock(signal) {
     `🐋 *AKUMULASI TERSEMBUNYI*`,
     ``,
     ...formatBaseLines(signal),
+    formatConfidenceLine(signal),
     ``,
     ...formatTradeLines(signal.entry, signal.stopLoss, signal.takeProfit, signal.atr14),
     ``,

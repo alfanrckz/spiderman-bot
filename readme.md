@@ -20,13 +20,15 @@ Anda sendiri lewat `/entry`, `/posisi`, `/close`.
 │   ├── data/
 │   │   ├── stockUniverse.js       # Baca idxUniverse.json, tambahkan suffix .JK
 │   │   ├── idxUniverse.json       # Hasil generate fetch-idx-universe.js (jangan edit manual)
-│   │   └── positions.json         # State posisi yang dilacak via /entry (auto commit ke git)
+│   │   ├── positions.json         # State posisi yang dilacak via /entry (auto commit ke git)
+│   │   └── signalLog.json         # Log sinyal + outcome D+1/D+3/D+5 untuk evaluasi win-rate (auto commit)
 │   ├── services/
 │   │   ├── marketData.js          # Fetch data EOD dari yahoo-finance2
 │   │   ├── indicatorEngine.js     # Hitung series EMA20/EMA50/RSI14/ATR14/OBV
 │   │   ├── marketCondition.js     # Cek tren IHSG sekali per scan (gate "jangan lawan pasar")
 │   │   ├── tradePlan.js           # Hitung Entry/Take Profit/Stop Loss berbasis ATR
-│   │   ├── signalDetector.js      # Filter likuiditas + deteksi semua kategori sinyal
+│   │   ├── signalDetector.js      # Filter likuiditas + deteksi semua kategori sinyal + confidence score
+│   │   ├── signalLog.js           # Catat sinyal & evaluasi outcome D+1/D+3/D+5 (win-rate berbasis data)
 │   │   ├── scanner.js             # Orkestrasi scan seluruh universum
 │   │   └── positionTracker.js     # /entry /close + evaluasi status posisi (HOLD/TP/SL/invalid)
 │   ├── telegram/
@@ -83,44 +85,84 @@ Setelah lolos likuiditas & kondisi pasar bullish, tiap ticker dicek terhadap 4 k
 1. **🟢 Bullish Pullback** (swing) — `Close > EMA20 > EMA50` (uptrend) dan `RSI(14)` di rentang
    `35–48` (koreksi sehat dalam tren naik). EMA50 juga wajib masih naik dibanding ~10 hari
    (2 minggu) lalu — mencegah kasus `EMA20 > EMA50` yang terjadi padahal EMA50-nya sendiri sudah
-   mendatar/melandai (tren melemah, bukan tren naik yang benar-benar sehat).
+   mendatar/melandai (tren melemah, bukan tren naik yang benar-benar sehat). Uptrend ini (bukan
+   RSI-nya) juga wajib **bertahan minimal `PULLBACK_TREND_PERSISTENCE_DAYS` hari terakhir**
+   (default 3), bukan cuma hari ini — supaya bukan cuma EMA20 baru saja lewat di atas EMA50
+   sesaat lalu langsung whipsaw balik.
 2. **🔄 Bullish Reversal** (swing/intraday) — salah satu dari:
-   - **Golden Cross**: `EMA20` baru memotong ke atas `EMA50` hari ini (kemarin masih di bawah),
-     dan RSI belum overbought (`< 70`).
-   - **RSI Oversold Recovery**: `RSI(14)` kemarin < 30, hari ini rebound ke ≥ 30, dan harga naik
-     dari penutupan kemarin.
+   - **Golden Cross**: `EMA20` memotong ke atas `EMA50` dalam `BULLISH_REVERSAL_CROSS_LOOKBACK_DAYS`
+     hari terakhir (default: hari ini atau sampai 2 hari lalu), dan sejak hari cross itu `EMA20`
+     **belum pernah balik** ke bawah `EMA50` sampai hari ini (anti-whipsaw), serta RSI belum
+     overbought (`< 70`).
+   - **RSI Oversold Recovery**: `RSI(14)` rebound dari < 30 ke ≥ 30 dalam window yang sama, RSI
+     **belum pernah balik** di bawah 30 sejak hari rebound, dan harga hari ini masih di atas
+     penutupan hari rebound (follow-through, bukan pop sehari yang langsung mati).
 3. **🚀 Volume Spike** (intraday) — volume hari ini ≥ 2× rata-rata volume 20 hari, harga naik
    ≥ 3% dari penutupan kemarin, RSI belum overbought (`< 70`), **dan candle-nya "closed strong"**
    — Close berada di ≥50% bagian atas range hari itu (`(Close-Low)/(High-Low) ≥ 0.5`). Tanpa ini,
    saham yang sempat naik tinggi lalu dijual turun sampai closing (spike-and-fade, tanda lemah)
-   ikut lolos padahal buyer sudah kehilangan kendali di akhir sesi.
+   ikut lolos padahal buyer sudah kehilangan kendali di akhir sesi. **Plus syarat
+   volatility-contraction ("squeeze")**: rata-rata ATR%(=ATR14/Close) di `VOLUME_SPIKE_SQUEEZE_LOOKBACK_DAYS`
+   hari sebelum hari spike (default 10, tidak termasuk hari spike sendiri — ATR-nya sudah
+   terinflasi) harus ≤ `VOLUME_SPIKE_SQUEEZE_MAX_RATIO` (default 0.85) dikali rata-rata ATR% di
+   `VOLUME_SPIKE_SQUEEZE_BASE_DAYS` hari sebelumnya lagi (default 40) — breakout asli biasanya
+   didahului periode volatilitas menyempit ("coiling"), pump/berita satu-hari biasanya tidak.
    **Entry yang disarankan bukan harga penutupan hari spike** (itu harga paling euforia/mahal
    hari itu, entry di situ = chasing dan sering langsung dikoreksi besoknya) — melainkan area
    retracement ke **EMA20**, dengan SL/TP dihitung ulang dari level itu. Kalau harga tidak pernah
    retest ke area tersebut, sinyalnya dilewati saja, bukan dipaksakan entry di harga tinggi.
 4. **🐋 Akumulasi Tersembunyi** (proxy volume, *bukan* bandarmology broker asli) — OBV
-   (On-Balance Volume) mencetak rekor tertinggi baru dalam 20 hari terakhir, tapi harga **belum**
-   ikut mencetak rekor tertinggi, RSI belum overbought, **dan** nilai transaksi **hari ini** *serta*
-   rata-rata 20 hari sama-sama ≥ Rp 10 Miliar (jauh di atas ambang likuiditas dasar). Indikasi
-   volume beli menumpuk lebih dulu sebelum harga bergerak. Ini hanya proxy dari data harga &
-   volume publik (Yahoo Finance) — bukan analisis broker summary/asing net buy seperti
-   bandarmology yang sesungguhnya, karena data itu tidak tersedia gratis.
+   (On-Balance Volume) harus naik **konsisten multi-hari**: rata-rata OBV `HIDDEN_ACCUMULATION_OBV_RECENT_WINDOW_DAYS`
+   hari terakhir (default 5) harus di atas rata-rata OBV `HIDDEN_ACCUMULATION_OBV_BASE_WINDOW_DAYS`
+   hari sebelumnya (default 15, total pas 20 hari lookback) dengan selisih minimal
+   `HIDDEN_ACCUMULATION_MIN_OBV_SLOPE_RATIO` (default 0.15) dari range OBV di window itu, **dan**
+   rata-rata terkini itu harus melampaui OBV tertinggi di 15 hari sebelumnya — bukan cuma satu
+   bar terakhir yang kebetulan jadi rekor. Harga **belum** ikut mencetak rekor tertinggi, RSI
+   belum overbought, **dan** nilai transaksi **hari ini** *serta* rata-rata 20 hari sama-sama
+   ≥ Rp 10 Miliar (jauh di atas ambang likuiditas dasar). Indikasi volume beli menumpuk lebih
+   dulu sebelum harga bergerak. Ini hanya proxy dari data harga & volume publik (Yahoo Finance) —
+   bukan analisis broker summary/asing net buy seperti bandarmology yang sesungguhnya, karena
+   data itu tidak tersedia gratis.
 
 Guard RSI overbought (`< 70`) di atas sengaja dipasang supaya bot tidak "mengejar" saham yang
 sudah naik terlalu jauh di hari yang sama — mengurangi risiko entry di puncak lonjakan harga.
 
 > Catatan khusus kategori Akumulasi Tersembunyi: OBV gampang terpicu oleh saham tidak likuid —
-> satu transaksi besar di saham tipis bisa membuat OBV mencetak "rekor baru" padahal cuma noise,
-> bukan akumulasi sungguhan. Rata-rata 20 hari saja tidak cukup — rata-rata bisa terdongkrak
-> beberapa hari ramai padahal hari sinyal itu sendiri (hari yang mau di-entry) sepi. Karena itu
-> nilai transaksi hari ini **dan** rata-rata 20 hari harus sama-sama lolos ambang. Ini tetap
-> proxy kasar — Yahoo Finance tidak menyediakan data kedalaman order book (bid-ask depth) asli,
-> jadi nilai transaksi besar tidak 100% menjamin order book-nya ramai.
+> satu transaksi besar di saham tipis bisa membuat OBV mencetak "rekor baru" dalam 1 hari padahal
+> cuma noise, bukan akumulasi sungguhan. Karena itu sejak versi ini kenaikan OBV wajib tercermin
+> di **rata-rata multi-hari**, bukan satu bar terakhir saja (lihat detail di atas) — satu print
+> besar yang tidak diikuti hari-hari berikutnya tidak akan cukup menggerakkan rata-rata 5 hari
+> melewati rata-rata 15 hari sebelumnya. Nilai transaksi hari ini **dan** rata-rata 20 hari juga
+> tetap harus sama-sama lolos ambang likuiditas kategori ini. Ini tetap proxy kasar — Yahoo
+> Finance tidak menyediakan data kedalaman order book (bid-ask depth) asli, jadi nilai transaksi
+> besar tidak 100% menjamin order book-nya ramai.
 
 **Entry / Take Profit / Stop Loss** (berbasis ATR(14), berlaku untuk semua kategori di atas):
 - Entry = Close terakhir
 - Stop Loss = Entry − 1.5 × ATR(14)
 - Take Profit = Entry + 2 × risk (risk = Entry − Stop Loss), sehingga Risk:Reward ≈ 1:2
+
+## Confidence Score
+
+Setiap sinyal (di kategori manapun) juga menampilkan `⭐ Confidence: N/6` — jumlah dimensi
+teknikal independen yang sejalan hari itu: tren selaras (`Close>EMA20>EMA50`), EMA50 sedang naik,
+volume 3 hari terakhir konsisten di atas rata-rata, OBV sedang naik, RSI di zona sehat (40-65,
+ada ruang gerak), dan volatilitas tidak sedang blow-out. **Ini proxy konfluensi teknikal, bukan
+probabilitas tervalidasi** — sengaja tidak dilabeli "win probability" atau skor "/100". Kategori
+tiap hasil scan juga diurutkan berdasarkan confidence tertinggi terlebih dahulu.
+
+Validasi sesungguhnya datang dari **signal log** (lihat di bawah): setelah beberapa minggu data
+terkumpul, confidence bisa dicek terhadap win-rate riil, bukan cuma heuristik.
+
+## Signal Log — Evaluasi Berbasis Data
+
+Tiap kali `/scan` (manual, terjadwal, atau via GitHub Actions) berjalan, setiap sinyal yang muncul
+otomatis dicatat ke `src/data/signalLog.json` (auto commit ke git, pola yang sama seperti
+`positions.json`). Beberapa hari kemudian, scan berikutnya akan mengisi outcome (`d1`/`d3`/`d5` —
+lihat `SIGNAL_LOG_OUTCOME_HORIZONS_DAYS`) berdasarkan pergerakan harga riil sejak tanggal sinyal.
+Tujuannya supaya evaluasi "sinyal ini bagus atau tidak" berbasis data historis yang terus
+terkumpul, bukan cuma kesan dari memantau manual — dan jadi dasar tuning threshold di atas
+berikutnya kalau diperlukan.
 
 ## Pelacakan Posisi (/entry, /posisi, /close)
 
@@ -306,6 +348,20 @@ git push -u origin main
 | `RSI_OVERBOUGHT_THRESHOLD` | ❌ | `70` | Ambang RSI overbought — di atas ini, Reversal & Volume Spike diabaikan |
 | `HIDDEN_ACCUMULATION_MIN_AVG_VALUE` | ❌ | `10000000000` | Ambang rata-rata nilai transaksi 20 hari khusus kategori Akumulasi Tersembunyi (Rp) |
 | `VOLUME_SPIKE_MIN_CLOSE_STRENGTH` | ❌ | `0.5` | Minimum posisi Close dalam range High-Low hari itu (0-1) untuk kategori Volume Spike |
+| `HIDDEN_ACCUMULATION_OBV_RECENT_WINDOW_DAYS` | ❌ | `5` | Jumlah hari window "terkini" untuk cek rata-rata OBV naik konsisten |
+| `HIDDEN_ACCUMULATION_OBV_BASE_WINDOW_DAYS` | ❌ | `15` | Jumlah hari window "dasar" (dibandingkan ke window terkini) untuk OBV |
+| `HIDDEN_ACCUMULATION_MIN_OBV_SLOPE_RATIO` | ❌ | `0.15` | Selisih minimum rata-rata OBV terkini vs dasar, dinormalisasi range OBV |
+| `VOLUME_SPIKE_SQUEEZE_LOOKBACK_DAYS` | ❌ | `10` | Jumlah hari sebelum hari spike untuk cek volatilitas "terkini" (squeeze) |
+| `VOLUME_SPIKE_SQUEEZE_BASE_DAYS` | ❌ | `40` | Jumlah hari sebelum window squeeze untuk baseline volatilitas |
+| `VOLUME_SPIKE_SQUEEZE_MAX_RATIO` | ❌ | `0.85` | Maksimum rasio ATR% terkini vs baseline supaya dianggap squeeze (breakout valid) |
+| `PULLBACK_TREND_PERSISTENCE_DAYS` | ❌ | `3` | Jumlah hari uptrend harus bertahan berturut-turut untuk kategori Bullish Pullback |
+| `BULLISH_REVERSAL_CROSS_LOOKBACK_DAYS` | ❌ | `2` | Jendela hari ke belakang untuk cari golden cross/RSI recovery + syarat bertahan sampai hari ini |
+| `CONFIRMATION_VOLUME_SUSTAINED_RATIO` | ❌ | `1.2` | Ambang rata-rata rasio volume 3 hari terakhir untuk dimensi confidence "Volume" |
+| `CONFIRMATION_RSI_HEALTHY_MIN` / `_MAX` | ❌ | `40` / `65` | Rentang RSI "sehat" untuk dimensi confidence "RSI" |
+| `CONFIRMATION_VOLATILITY_CONTAINED_MAX_RATIO` | ❌ | `1.1` | Ambang rasio ATR% (longgar, bukan syarat squeeze) untuk dimensi confidence "Volatilitas" |
+| `SIGNAL_LOG_ENABLED` | ❌ | `true` | Aktifkan/nonaktifkan pencatatan otomatis ke `signalLog.json` |
+| `SIGNAL_LOG_OUTCOME_HORIZONS_DAYS` | ❌ | `1,3,5` | Horizon hari bursa (dipisah koma) untuk evaluasi outcome tiap sinyal |
+| `SIGNAL_LOG_MAX_ENTRIES` | ❌ | `2000` | Batas jumlah record di `signalLog.json` sebelum entry resolved terlama di-prune |
 
 ## Command Telegram
 

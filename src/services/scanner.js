@@ -2,7 +2,12 @@ import { STOCK_UNIVERSE } from '../data/stockUniverse.js';
 import { analyzeTicker } from './signalDetector.js';
 import { getMarketCondition } from './marketCondition.js';
 import { mapWithConcurrency } from '../utils/concurrencyLimiter.js';
+import { recordSignalEntries, updateSignalLogOutcomes } from './signalLog.js';
 import { config } from '../config/env.js';
+
+function byConfidenceDescending(a, b) {
+  return b.confidence - a.confidence;
+}
 
 export async function runSwingScan() {
   const marketCondition = await getMarketCondition();
@@ -26,12 +31,25 @@ export async function runSwingScan() {
 
   const liquidResults = analyzed.filter(Boolean);
 
-  const bullishPullback = liquidResults.filter((result) => result.matches.bullishPullback);
-  const bullishReversal = liquidResults.filter((result) => result.matches.bullishReversal);
-  const volumeSpike = liquidResults.filter((result) => result.matches.volumeSpike);
-  const hiddenAccumulation = liquidResults.filter((result) => result.matches.hiddenAccumulation);
+  // Diurutkan berdasarkan confidence descending supaya kandidat paling meyakinkan tampil duluan
+  // di Telegram — confidence adalah proxy konfluensi teknikal, bukan probabilitas tervalidasi.
+  const bullishPullback = liquidResults.filter((result) => result.matches.bullishPullback).sort(byConfidenceDescending);
+  const bullishReversal = liquidResults.filter((result) => result.matches.bullishReversal).sort(byConfidenceDescending);
+  const volumeSpike = liquidResults.filter((result) => result.matches.volumeSpike).sort(byConfidenceDescending);
+  const hiddenAccumulation = liquidResults.filter((result) => result.matches.hiddenAccumulation).sort(byConfidenceDescending);
 
-  return { bullishPullback, bullishReversal, volumeSpike, hiddenAccumulation };
+  const result = { bullishPullback, bullishReversal, volumeSpike, hiddenAccumulation };
+
+  if (config.signalLogEnabled) {
+    try {
+      await recordSignalEntries(result);
+      await updateSignalLogOutcomes();
+    } catch (error) {
+      console.error('[scanner] Gagal update signal log:', error.message);
+    }
+  }
+
+  return result;
 }
 
 export function countActionableSignals(result) {
