@@ -8,7 +8,11 @@
     "confidence": 6,
     "confidenceMax": 6,
     "outcomes": {
-      "d1": null,
+      "d1": {
+        "closePrice": 1290,
+        "pctChange": -9.79020979020979,
+        "checkedDate": "2026-09-01"
+      },
       "d3": null,
       "d5": null
     }
@@ -22,7 +26,11 @@
     "confidence": 5,
     "confidenceMax": 6,
     "outcomes": {
-      "d1": null,
+      "d1": {
+        "closePrice": 3830,
+        "pctChange": 1.3227513227513228,
+        "checkedDate": "2026-09-01"
+      },
       "d3": null,
       "d5": null
     }
@@ -36,7 +44,11 @@
     "confidence": 5,
     "confidenceMax": 6,
     "outcomes": {
-      "d1": null,
+      "d1": {
+        "closePrice": 1135,
+        "pctChange": 2.2522522522522523,
+        "checkedDate": "2026-09-01"
+      },
       "d3": null,
       "d5": null
     }
@@ -50,7 +62,11 @@
     "confidence": 5,
     "confidenceMax": 6,
     "outcomes": {
-      "d1": null,
+      "d1": {
+        "closePrice": 113,
+        "pctChange": -4.23728813559322,
+        "checkedDate": "2026-09-01"
+      },
       "d3": null,
       "d5": null
     }
@@ -64,7 +80,11 @@
     "confidence": 5,
     "confidenceMax": 6,
     "outcomes": {
-      "d1": null,
+      "d1": {
+        "closePrice": 250,
+        "pctChange": -2.34375,
+        "checkedDate": "2026-09-01"
+      },
       "d3": null,
       "d5": null
     }
@@ -78,7 +98,11 @@
     "confidence": 3,
     "confidenceMax": 6,
     "outcomes": {
-      "d1": null,
+      "d1": {
+        "closePrice": 191,
+        "pctChange": -3.535353535353535,
+        "checkedDate": "2026-09-01"
+      },
       "d3": null,
       "d5": null
     }
@@ -92,7 +116,11 @@
     "confidence": 5,
     "confidenceMax": 6,
     "outcomes": {
-      "d1": null,
+      "d1": {
+        "closePrice": 4160,
+        "pctChange": 0.4155484272280921,
+        "checkedDate": "2026-09-01"
+      },
       "d3": null,
       "d5": null
     }
@@ -106,7 +134,11 @@
     "confidence": 5,
     "confidenceMax": 6,
     "outcomes": {
-      "d1": null,
+      "d1": {
+        "closePrice": 113,
+        "pctChange": 5.497013145444216,
+        "checkedDate": "2026-09-01"
+      },
       "d3": null,
       "d5": null
     }
@@ -120,7 +152,11 @@
     "confidence": 5,
     "confidenceMax": 6,
     "outcomes": {
-      "d1": null,
+      "d1": {
+        "closePrice": 336,
+        "pctChange": 4.071830969489685,
+        "checkedDate": "2026-09-01"
+      },
       "d3": null,
       "d5": null
     }
@@ -134,7 +170,11 @@
     "confidence": 5,
     "confidenceMax": 6,
     "outcomes": {
-      "d1": null,
+      "d1": {
+        "closePrice": 1910,
+        "pctChange": 8.4937846976465,
+        "checkedDate": "2026-09-01"
+      },
       "d3": null,
       "d5": null
     }
@@ -148,7 +188,11 @@
     "confidence": 4,
     "confidenceMax": 6,
     "outcomes": {
-      "d1": null,
+      "d1": {
+        "closePrice": 1400,
+        "pctChange": 0.01781501571004983,
+        "checkedDate": "2026-09-01"
+      },
       "d3": null,
       "d5": null
     }
@@ -162,7 +206,11 @@
     "confidence": 4,
     "confidenceMax": 6,
     "outcomes": {
-      "d1": null,
+      "d1": {
+        "closePrice": 695,
+        "pctChange": 10.003080777174764,
+        "checkedDate": "2026-09-01"
+      },
       "d3": null,
       "d5": null
     }
@@ -176,7 +224,11 @@
     "confidence": 4,
     "confidenceMax": 6,
     "outcomes": {
-      "d1": null,
+      "d1": {
+        "closePrice": 2970,
+        "pctChange": 6.603515214727865,
+        "checkedDate": "2026-09-01"
+      },
       "d3": null,
       "d5": null
     }
@@ -190,7 +242,11 @@
     "confidence": 4,
     "confidenceMax": 6,
     "outcomes": {
-      "d1": null,
+      "d1": {
+        "closePrice": 446,
+        "pctChange": 35.0276005095096,
+        "checkedDate": "2026-09-01"
+      },
       "d3": null,
       "d5": null
     }
@@ -204,7 +260,11 @@
     "confidence": 6,
     "confidenceMax": 6,
     "outcomes": {
-      "d1": null,
+      "d1": {
+        "closePrice": 7375,
+        "pctChange": -2.9605263157894735,
+        "checkedDate": "2026-09-01"
+      },
       "d3": null,
       "d5": null
     }
@@ -218,7 +278,11 @@
     "confidence": 6,
     "confidenceMax": 6,
     "outcomes": {
-      "d1": null,
+      "d1": {
+        "closePrice": 780,
+        "pctChange": 0,
+        "checkedDate": "2026-09-01"
+      },
       "d3": null,
       "d5": null
     }
@@ -232,7 +296,11 @@
     "confidence": 5,
     "confidenceMax": 6,
     "outcomes": {
-      "d1": null,
+      "d1": {
+        "closePrice": 3080,
+        "pctChange": -0.6451612903225806,
+        "checkedDate": "2026-09-01"
+      },
       "d3": null,
       "d5": null
     }
@@ -246,7 +314,11 @@
     "confidence": 5,
     "confidenceMax": 6,
     "outcomes": {
-      "d1": null,
+      "d1": {
+        "closePrice": 1135,
+        "pctChange": 2.2522522522522523,
+        "checkedDate": "2026-09-01"
+      },
       "d3": null,
       "d5": null
     }
@@ -260,7 +332,11 @@
     "confidence": 5,
     "confidenceMax": 6,
     "outcomes": {
-      "d1": null,
+      "d1": {
+        "closePrice": 1405,
+        "pctChange": 0.7168458781362007,
+        "checkedDate": "2026-09-01"
+      },
       "d3": null,
       "d5": null
     }
@@ -274,7 +350,11 @@
     "confidence": 5,
     "confidenceMax": 6,
     "outcomes": {
-      "d1": null,
+      "d1": {
+        "closePrice": 710,
+        "pctChange": -1.3888888888888888,
+        "checkedDate": "2026-09-01"
+      },
       "d3": null,
       "d5": null
     }
@@ -288,7 +368,11 @@
     "confidence": 5,
     "confidenceMax": 6,
     "outcomes": {
-      "d1": null,
+      "d1": {
+        "closePrice": 2910,
+        "pctChange": -1.0204081632653061,
+        "checkedDate": "2026-09-01"
+      },
       "d3": null,
       "d5": null
     }
@@ -302,7 +386,11 @@
     "confidence": 5,
     "confidenceMax": 6,
     "outcomes": {
-      "d1": null,
+      "d1": {
+        "closePrice": 4090,
+        "pctChange": 1.2376237623762376,
+        "checkedDate": "2026-09-01"
+      },
       "d3": null,
       "d5": null
     }
@@ -316,7 +404,11 @@
     "confidence": 4,
     "confidenceMax": 6,
     "outcomes": {
-      "d1": null,
+      "d1": {
+        "closePrice": 174,
+        "pctChange": -5.434782608695652,
+        "checkedDate": "2026-09-01"
+      },
       "d3": null,
       "d5": null
     }
@@ -330,7 +422,11 @@
     "confidence": 4,
     "confidenceMax": 6,
     "outcomes": {
-      "d1": null,
+      "d1": {
+        "closePrice": 452,
+        "pctChange": -0.4405286343612335,
+        "checkedDate": "2026-09-01"
+      },
       "d3": null,
       "d5": null
     }
@@ -344,7 +440,11 @@
     "confidence": 3,
     "confidenceMax": 6,
     "outcomes": {
-      "d1": null,
+      "d1": {
+        "closePrice": 298,
+        "pctChange": -1.9736842105263157,
+        "checkedDate": "2026-09-01"
+      },
       "d3": null,
       "d5": null
     }
@@ -358,7 +458,11 @@
     "confidence": 3,
     "confidenceMax": 6,
     "outcomes": {
-      "d1": null,
+      "d1": {
+        "closePrice": 142,
+        "pctChange": -13.939393939393941,
+        "checkedDate": "2026-09-01"
+      },
       "d3": null,
       "d5": null
     }
@@ -372,7 +476,11 @@
     "confidence": 6,
     "confidenceMax": 6,
     "outcomes": {
-      "d1": null,
+      "d1": {
+        "closePrice": 310,
+        "pctChange": 25,
+        "checkedDate": "2026-08-31"
+      },
       "d3": null,
       "d5": null
     }
@@ -386,7 +494,11 @@
     "confidence": 5,
     "confidenceMax": 6,
     "outcomes": {
-      "d1": null,
+      "d1": {
+        "closePrice": 650,
+        "pctChange": 1.5625,
+        "checkedDate": "2026-08-31"
+      },
       "d3": null,
       "d5": null
     }
@@ -400,7 +512,11 @@
     "confidence": 5,
     "confidenceMax": 6,
     "outcomes": {
-      "d1": null,
+      "d1": {
+        "closePrice": 3780,
+        "pctChange": -0.5263157894736842,
+        "checkedDate": "2026-08-31"
+      },
       "d3": null,
       "d5": null
     }
@@ -414,7 +530,11 @@
     "confidence": 5,
     "confidenceMax": 6,
     "outcomes": {
-      "d1": null,
+      "d1": {
+        "closePrice": 2620,
+        "pctChange": 0.7692307692307693,
+        "checkedDate": "2026-08-31"
+      },
       "d3": null,
       "d5": null
     }
@@ -428,7 +548,11 @@
     "confidence": 4,
     "confidenceMax": 6,
     "outcomes": {
-      "d1": null,
+      "d1": {
+        "closePrice": 870,
+        "pctChange": -9.844559585492227,
+        "checkedDate": "2026-08-31"
+      },
       "d3": null,
       "d5": null
     }
@@ -442,7 +566,11 @@
     "confidence": 6,
     "confidenceMax": 6,
     "outcomes": {
-      "d1": null,
+      "d1": {
+        "closePrice": 960,
+        "pctChange": 12.727824965187182,
+        "checkedDate": "2026-08-31"
+      },
       "d3": null,
       "d5": null
     }
@@ -456,7 +584,11 @@
     "confidence": 5,
     "confidenceMax": 6,
     "outcomes": {
-      "d1": null,
+      "d1": {
+        "closePrice": 151,
+        "pctChange": 6.224443383710548,
+        "checkedDate": "2026-08-31"
+      },
       "d3": null,
       "d5": null
     }
@@ -470,7 +602,11 @@
     "confidence": 4,
     "confidenceMax": 6,
     "outcomes": {
-      "d1": null,
+      "d1": {
+        "closePrice": 99,
+        "pctChange": 8.584752006812021,
+        "checkedDate": "2026-08-31"
+      },
       "d3": null,
       "d5": null
     }
@@ -484,7 +620,11 @@
     "confidence": 4,
     "confidenceMax": 6,
     "outcomes": {
-      "d1": null,
+      "d1": {
+        "closePrice": 406,
+        "pctChange": 25.955619344061244,
+        "checkedDate": "2026-08-31"
+      },
       "d3": null,
       "d5": null
     }
@@ -498,7 +638,11 @@
     "confidence": 4,
     "confidenceMax": 6,
     "outcomes": {
-      "d1": null,
+      "d1": {
+        "closePrice": 256,
+        "pctChange": 15.406801430320266,
+        "checkedDate": "2026-08-31"
+      },
       "d3": null,
       "d5": null
     }
@@ -512,7 +656,11 @@
     "confidence": 6,
     "confidenceMax": 6,
     "outcomes": {
-      "d1": null,
+      "d1": {
+        "closePrice": 1345,
+        "pctChange": -3.237410071942446,
+        "checkedDate": "2026-08-31"
+      },
       "d3": null,
       "d5": null
     }
@@ -526,7 +674,11 @@
     "confidence": 6,
     "confidenceMax": 6,
     "outcomes": {
-      "d1": null,
+      "d1": {
+        "closePrice": 4830,
+        "pctChange": 2.9850746268656714,
+        "checkedDate": "2026-08-31"
+      },
       "d3": null,
       "d5": null
     }
@@ -540,7 +692,11 @@
     "confidence": 6,
     "confidenceMax": 6,
     "outcomes": {
-      "d1": null,
+      "d1": {
+        "closePrice": 1940,
+        "pctChange": 4.021447721179625,
+        "checkedDate": "2026-08-31"
+      },
       "d3": null,
       "d5": null
     }
@@ -554,7 +710,11 @@
     "confidence": 5,
     "confidenceMax": 6,
     "outcomes": {
-      "d1": null,
+      "d1": {
+        "closePrice": 1750,
+        "pctChange": 2.3391812865497075,
+        "checkedDate": "2026-08-31"
+      },
       "d3": null,
       "d5": null
     }
@@ -568,7 +728,11 @@
     "confidence": 5,
     "confidenceMax": 6,
     "outcomes": {
-      "d1": null,
+      "d1": {
+        "closePrice": 4330,
+        "pctChange": -1.8140589569160999,
+        "checkedDate": "2026-08-31"
+      },
       "d3": null,
       "d5": null
     }
@@ -582,7 +746,11 @@
     "confidence": 5,
     "confidenceMax": 6,
     "outcomes": {
-      "d1": null,
+      "d1": {
+        "closePrice": 3100,
+        "pctChange": -1.89873417721519,
+        "checkedDate": "2026-08-31"
+      },
       "d3": null,
       "d5": null
     }
@@ -596,7 +764,11 @@
     "confidence": 5,
     "confidenceMax": 6,
     "outcomes": {
-      "d1": null,
+      "d1": {
+        "closePrice": 3250,
+        "pctChange": 1.8808777429467085,
+        "checkedDate": "2026-08-31"
+      },
       "d3": null,
       "d5": null
     }
@@ -610,7 +782,11 @@
     "confidence": 5,
     "confidenceMax": 6,
     "outcomes": {
-      "d1": null,
+      "d1": {
+        "closePrice": 192,
+        "pctChange": 1.0526315789473684,
+        "checkedDate": "2026-08-31"
+      },
       "d3": null,
       "d5": null
     }
@@ -624,7 +800,11 @@
     "confidence": 5,
     "confidenceMax": 6,
     "outcomes": {
-      "d1": null,
+      "d1": {
+        "closePrice": 354,
+        "pctChange": -1.6666666666666667,
+        "checkedDate": "2026-08-31"
+      },
       "d3": null,
       "d5": null
     }
@@ -638,7 +818,11 @@
     "confidence": 5,
     "confidenceMax": 6,
     "outcomes": {
-      "d1": null,
+      "d1": {
+        "closePrice": 970,
+        "pctChange": 1.5706806282722512,
+        "checkedDate": "2026-08-31"
+      },
       "d3": null,
       "d5": null
     }
@@ -652,7 +836,11 @@
     "confidence": 5,
     "confidenceMax": 6,
     "outcomes": {
-      "d1": null,
+      "d1": {
+        "closePrice": 454,
+        "pctChange": -0.43859649122807015,
+        "checkedDate": "2026-08-31"
+      },
       "d3": null,
       "d5": null
     }
@@ -666,7 +854,11 @@
     "confidence": 4,
     "confidenceMax": 6,
     "outcomes": {
-      "d1": null,
+      "d1": {
+        "closePrice": 10825,
+        "pctChange": 5.8679706601467,
+        "checkedDate": "2026-08-31"
+      },
       "d3": null,
       "d5": null
     }
@@ -680,7 +872,11 @@
     "confidence": 4,
     "confidenceMax": 6,
     "outcomes": {
-      "d1": null,
+      "d1": {
+        "closePrice": 304,
+        "pctChange": 4.10958904109589,
+        "checkedDate": "2026-08-31"
+      },
       "d3": null,
       "d5": null
     }
@@ -694,7 +890,11 @@
     "confidence": 4,
     "confidenceMax": 6,
     "outcomes": {
-      "d1": null,
+      "d1": {
+        "closePrice": 468,
+        "pctChange": 1.7391304347826086,
+        "checkedDate": "2026-08-31"
+      },
       "d3": null,
       "d5": null
     }
