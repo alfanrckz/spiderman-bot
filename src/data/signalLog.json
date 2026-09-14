@@ -7174,5 +7174,19 @@
       "d3": null,
       "d5": null
     }
+  },
+  {
+    "id": "RMKO.JK-bullishReversal-2026-09-11",
+    "ticker": "RMKO.JK",
+    "category": "bullishReversal",
+    "date": "2026-09-11",
+    "entryRef": 350,
+    "confidence": 6,
+    "confidenceMax": 6,
+    "outcomes": {
+      "d1": null,
+      "d3": null,
+      "d5": null
+    }
   }
 ]
